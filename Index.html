@@ -1,0 +1,3325 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="application-name" content="Calidad y Obra">
+  <meta name="theme-color" content="#0f766e">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Calidad y Obra">
+  <title>Calidad y Obra | Seguimiento de Actividades</title>
+  <style>
+    :root {
+      --ink: #1e2428;
+      --muted: #69757f;
+      --line: #dbe1e5;
+      --panel: #f7f9fa;
+      --paper: #ffffff;
+      --bg: #edf2f4;
+      --brand: #0f766e;
+      --brand-strong: #115e59;
+      --site: #2563eb;
+      --site-strong: #1d4ed8;
+      --warn: #b45309;
+      --done: #15803d;
+      --danger: #b91c1c;
+      --shadow: 0 18px 45px rgba(23, 31, 38, .12);
+      --soft-shadow: 0 10px 28px rgba(23, 31, 38, .07);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      color: var(--ink);
+      background: var(--bg);
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    .access-screen {
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background:
+        radial-gradient(circle at top left, rgba(15, 118, 110, .16), transparent 34%),
+        linear-gradient(120deg, rgba(15, 118, 110, .10), rgba(37, 99, 235, .09)),
+        #eef4f5;
+    }
+
+    .access-panel {
+      width: min(960px, 100%);
+      display: grid;
+      gap: 24px;
+    }
+
+    .access-title {
+      display: grid;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .access-title h1 {
+      margin: 0;
+      font-size: clamp(28px, 5vw, 44px);
+      letter-spacing: 0;
+    }
+
+    .access-title p {
+      margin: 0 auto;
+      max-width: 680px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .access-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .login-card {
+      width: min(480px, 100%);
+      margin: 0 auto;
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 24px;
+      display: grid;
+      gap: 15px;
+      box-shadow: var(--shadow);
+    }
+
+    .login-card h2 {
+      margin: 0;
+      font-size: 22px;
+    }
+
+    .login-card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .login-help {
+      padding: 10px 12px;
+      border-radius: 8px;
+      background: #f3f7f8;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .login-error {
+      color: var(--danger);
+      font-size: 13px;
+      font-weight: 700;
+      min-height: 18px;
+    }
+
+    .access-card {
+      min-height: 230px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      color: var(--ink);
+      text-align: left;
+      padding: 22px;
+      display: grid;
+      align-content: space-between;
+      gap: 18px;
+      box-shadow: 0 12px 28px rgba(30, 36, 40, .09);
+    }
+
+    .access-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow);
+    }
+
+    .access-card strong {
+      font-size: 24px;
+      letter-spacing: 0;
+    }
+
+    .access-card p {
+      color: var(--muted);
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    .access-badge {
+      width: 54px;
+      height: 54px;
+      border-radius: 8px;
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 26px;
+      font-weight: 800;
+      background: var(--brand);
+    }
+
+    .access-card[data-access="obra"] .access-badge {
+      background: var(--site);
+    }
+
+    .access-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      font-weight: 800;
+    }
+
+    button, input, textarea, select {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      cursor: pointer;
+    }
+
+    button, a, input, textarea, select {
+      transition: border-color .16s ease, background .16s ease, color .16s ease, box-shadow .16s ease, transform .16s ease;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible,
+    textarea:focus-visible,
+    select:focus-visible {
+      outline: 3px solid rgba(15, 118, 110, .22);
+      outline-offset: 2px;
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 280px minmax(0, 1fr);
+    }
+
+    aside {
+      background: linear-gradient(180deg, #233137 0%, #1f2a30 100%);
+      color: #f7fafb;
+      padding: 24px 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      box-shadow: 8px 0 24px rgba(23, 31, 38, .08);
+    }
+
+    .brand {
+      display: grid;
+      gap: 6px;
+      padding: 2px 6px 14px;
+      border-bottom: 1px solid rgba(255,255,255,.16);
+    }
+
+    .brand h1 {
+      font-size: 20px;
+      line-height: 1.15;
+      margin: 0;
+      letter-spacing: 0;
+    }
+
+    .brand span {
+      color: #c8d2d8;
+      font-size: 13px;
+    }
+
+    .access-current {
+      display: grid;
+      gap: 4px;
+      padding: 12px;
+      background: rgba(255,255,255,.09);
+      border: 1px solid rgba(255,255,255,.16);
+      border-radius: 8px;
+      overflow-wrap: anywhere;
+    }
+
+    .access-current span {
+      color: #c8d2d8;
+      font-size: 12px;
+    }
+
+    .access-current strong {
+      font-size: 15px;
+    }
+
+    .nav-button {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: #eaf0f2;
+      background: transparent;
+      border-radius: 8px;
+      padding: 12px 12px;
+      text-align: left;
+      font-weight: 800;
+    }
+
+    .nav-button.active {
+      background: #0f766e;
+      color: white;
+      box-shadow: 0 10px 22px rgba(15, 118, 110, .22);
+    }
+
+    .nav-button:not(.active):hover {
+      background: rgba(255,255,255,.1);
+    }
+
+    .nav-button[data-view="obra"].active {
+      background: var(--site);
+    }
+
+    .nav-button[data-view="nueva"].active {
+      background: #475569;
+    }
+
+    .nav-button .count {
+      min-width: 28px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: rgba(255,255,255,.16);
+      font-size: 12px;
+    }
+
+    .side-tools {
+      margin-top: auto;
+      display: grid;
+      gap: 10px;
+    }
+
+    .ghost-side {
+      color: #f7fafb;
+      background: rgba(255,255,255,.1);
+      border: 1px solid rgba(255,255,255,.2);
+      border-radius: 8px;
+      padding: 10px 12px;
+      text-align: center;
+      text-decoration: none;
+      font-weight: 750;
+    }
+
+    .ghost-side.primary {
+      color: #ffffff;
+      background: #0f766e;
+      border-color: rgba(255,255,255,.3);
+      font-weight: 800;
+    }
+
+    .ghost-side.muted {
+      color: #c8d2d8;
+      background: rgba(255,255,255,.06);
+      border-color: rgba(255,255,255,.12);
+      font-size: 12px;
+    }
+
+    main {
+      min-width: 0;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+    }
+
+    header {
+      background: linear-gradient(135deg, #ffffff 0%, #f7fafb 100%);
+      border-bottom: 1px solid var(--line);
+      margin: 18px 24px 0;
+      padding: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      position: sticky;
+      top: 12px;
+      z-index: 8;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--brand);
+      border-radius: 10px;
+      box-shadow: 0 10px 28px rgba(20, 30, 40, .08);
+    }
+
+    .page-title {
+      display: grid;
+      gap: 6px;
+      min-width: 220px;
+    }
+
+    .page-title h2 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.05;
+      letter-spacing: 0;
+    }
+
+    .page-title p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.35;
+      max-width: 520px;
+    }
+
+    .header-actions {
+      display: grid;
+      grid-template-columns: auto auto;
+      align-items: center;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .header-primary-actions,
+    .header-maintenance-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .header-maintenance-actions {
+      padding-left: 10px;
+      border-left: 1px solid var(--line);
+    }
+
+    .header-actions .btn {
+      min-height: 46px;
+      padding-inline: 18px;
+      white-space: nowrap;
+    }
+
+    .header-actions .btn.danger {
+      background: #fff1f2;
+      color: var(--danger);
+      border: 1px solid #fecaca;
+    }
+
+    .header-actions .btn.danger:hover {
+      background: #fee2e2;
+      box-shadow: 0 8px 18px rgba(185, 28, 28, .12);
+    }
+
+    .header-switch {
+      display: none;
+    }
+
+    .content {
+      padding: 24px 30px 36px;
+      overflow: auto;
+    }
+
+    .role-summary {
+      margin-bottom: 18px;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px 16px;
+      box-shadow: 0 1px 0 rgba(20, 30, 40, .03);
+    }
+
+    .role-summary strong {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 3px;
+    }
+
+    .role-summary span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .metric {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      min-height: 86px;
+      display: grid;
+      align-content: space-between;
+      border-left: 5px solid transparent;
+      box-shadow: 0 1px 0 rgba(20, 30, 40, .03);
+      color: var(--ink);
+      text-align: left;
+      cursor: pointer;
+    }
+
+    .metric:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--soft-shadow);
+    }
+
+    .metric.active {
+      border-color: #8fc5bf;
+      background: #f0fdfa;
+      box-shadow: 0 10px 28px rgba(15, 118, 110, .12);
+    }
+
+    .metric:nth-child(1) { border-left-color: #54656f; }
+    .metric:nth-child(2) { border-left-color: var(--warn); }
+    .metric:nth-child(3) { border-left-color: var(--site); }
+    .metric:nth-child(4) { border-left-color: #d97706; }
+    .metric:nth-child(5) { border-left-color: var(--done); }
+
+    .metric strong {
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .dashboard-filter-panel {
+      margin-bottom: 18px;
+    }
+
+    .executive-report {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .executive-report h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .executive-report .stats {
+      margin-bottom: 0;
+    }
+
+    .work-area {
+      display: grid;
+      grid-template-columns: minmax(300px, 390px) minmax(0, 1fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .new-request-screen {
+      display: grid;
+      grid-template-columns: minmax(280px, 720px);
+      justify-content: center;
+    }
+
+    .quality-board {
+      display: grid;
+      gap: 14px;
+    }
+
+    .quality-review {
+      background: linear-gradient(180deg, #fffbeb 0%, #fff7dc 100%);
+      border: 1px solid #fde68a;
+      border-radius: 8px;
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      box-shadow: 0 1px 0 rgba(146, 64, 14, .06);
+    }
+
+    .quality-review .list {
+      gap: 10px;
+    }
+
+    .quality-review .ticket {
+      border-color: #f5d27a;
+      grid-template-columns: 118px minmax(0, 1fr);
+    }
+
+    .quality-review .ticket-img {
+      min-height: 128px;
+    }
+
+    .quality-review .timeline {
+      grid-template-columns: repeat(3, 1fr);
+      display: grid;
+    }
+
+    .quality-review .timeline-line {
+      display: grid;
+      gap: 2px;
+    }
+
+    .quality-review-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .quality-review-head h3 {
+      margin: 0;
+      font-size: 17px;
+    }
+
+    .quality-review-head span {
+      color: #92400e;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .detail-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .quality-projects {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      box-shadow: 0 1px 0 rgba(20, 30, 40, .03);
+    }
+
+    .quality-projects .project-card {
+      border-left-color: var(--brand);
+    }
+
+    .quality-projects .project-count {
+      background: var(--brand);
+    }
+
+    .filter-chips {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+
+    .chip {
+      min-height: 34px;
+      padding: 7px 11px;
+      border: 1px solid var(--line);
+      background: white;
+      color: #334047;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .chip.active {
+      background: var(--brand);
+      color: white;
+      border-color: var(--brand);
+    }
+
+    .panel, .ticket {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      box-shadow: 0 1px 0 rgba(20, 30, 40, .03);
+    }
+
+    .panel {
+      padding: 18px;
+      display: grid;
+      gap: 14px;
+    }
+
+    .request-form {
+      padding: 0;
+      overflow: hidden;
+      border-color: #cfdbe1;
+    }
+
+    .request-head {
+      padding: 18px 20px;
+      background: linear-gradient(135deg, #ffffff 0%, #eef6f5 100%);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .request-head h3 {
+      font-size: 22px;
+      margin: 2px 0 4px;
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      width: fit-content;
+      padding: 4px 9px;
+      border-radius: 999px;
+      background: rgba(15, 118, 110, .1);
+      color: var(--brand);
+      font-size: 11px;
+      font-weight: 900;
+      letter-spacing: .03em;
+      text-transform: uppercase;
+    }
+
+    .panel h3, .list-head h3 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: 0;
+    }
+
+    .panel-subtitle {
+      margin: -6px 0 0;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .form-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .request-grid {
+      padding: 16px 20px 0;
+      gap: 14px;
+    }
+
+    .form-section {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid #e1e9ed;
+      border-radius: 8px;
+      background: #ffffff;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid #edf2f4;
+    }
+
+    .section-title strong {
+      color: var(--ink);
+      font-size: 15px;
+    }
+
+    .section-title span {
+      max-width: 290px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      text-align: right;
+    }
+
+    .project-fields {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    label {
+      display: grid;
+      gap: 6px;
+      color: #334047;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: #fbfcfd;
+      color: var(--ink);
+      border-radius: 8px;
+      min-height: 46px;
+      padding: 11px 12px;
+      outline: none;
+      font-weight: 650;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 108px;
+      line-height: 1.4;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px rgba(15, 118, 110, .14);
+    }
+
+    .camera-box {
+      border: 1px solid #cfdbe1;
+      background: #f8fbfc;
+      border-radius: 8px;
+      overflow: hidden;
+      display: grid;
+      min-height: 250px;
+    }
+
+    .camera-preview {
+      min-height: 196px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+      padding: 16px;
+    }
+
+    .camera-preview img, .camera-preview video {
+      width: 100%;
+      height: 100%;
+      max-height: 330px;
+      object-fit: cover;
+      display: block;
+      background: #111;
+    }
+
+    .camera-actions {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      padding: 10px;
+      border-top: 1px solid var(--line);
+      background: #ffffff;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      min-height: 42px;
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-weight: 700;
+      color: white;
+      background: var(--brand);
+    }
+
+    .btn:hover {
+      background: var(--brand-strong);
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(15, 118, 110, .15);
+    }
+
+    .btn.secondary {
+      color: var(--ink);
+      background: #e8eef1;
+    }
+
+    .btn.secondary:hover { background: #dbe5e9; }
+
+    .btn.warn { background: var(--warn); }
+    .btn.done { background: var(--done); }
+    .btn.danger { background: var(--danger); }
+
+    .btn.icon {
+      width: 42px;
+      padding: 0;
+      font-size: 18px;
+    }
+
+    .form-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .request-actions {
+      padding: 16px 20px 20px;
+      background: #f7fafb;
+      border-top: 1px solid var(--line);
+    }
+
+    .request-actions .btn {
+      min-height: 48px;
+    }
+
+    .primary-action {
+      box-shadow: 0 8px 18px rgba(15, 118, 110, .18);
+    }
+
+    .filters {
+      display: grid;
+      grid-template-columns: minmax(180px, 1fr) minmax(150px, 210px);
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .project-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .project-group {
+      display: grid;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .project-group-title {
+      margin: 0;
+      color: #334047;
+      font-size: 14px;
+      font-weight: 900;
+    }
+
+    .project-card {
+      min-height: 138px;
+      background: white;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--site);
+      border-radius: 8px;
+      padding: 14px;
+      text-align: left;
+      display: grid;
+      align-content: space-between;
+      gap: 14px;
+      color: var(--ink);
+      box-shadow: 0 1px 0 rgba(20, 30, 40, .03);
+      transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+    }
+
+    .project-card:hover {
+      border-color: #b9c7d0;
+      box-shadow: var(--soft-shadow);
+      transform: translateY(-1px);
+    }
+
+    .project-card strong {
+      font-size: 17px;
+      overflow-wrap: anywhere;
+    }
+
+    .project-card span {
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .project-count {
+      width: max-content;
+      min-width: 34px;
+      height: 28px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      padding: 0 10px;
+      color: white !important;
+      background: var(--site);
+      font-weight: 800;
+    }
+
+    .admin-layout {
+      display: grid;
+      grid-template-columns: minmax(280px, 380px) minmax(0, 1fr);
+      gap: 16px;
+      align-items: start;
+    }
+
+    .user-card {
+      background: white;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+    }
+
+    .user-card-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .user-card strong {
+      display: block;
+      font-size: 15px;
+    }
+
+    .user-card span {
+      color: var(--muted);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
+
+    .detail-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .detail-head h3 {
+      margin: 0;
+      font-size: 19px;
+    }
+
+    .list {
+      display: grid;
+      gap: 12px;
+    }
+
+    .list-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .ticket {
+      display: grid;
+      grid-template-columns: 156px minmax(0, 1fr);
+      overflow: hidden;
+      transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+    }
+
+    .ticket:hover {
+      border-color: #c3cfd6;
+      box-shadow: var(--soft-shadow);
+      transform: translateY(-1px);
+    }
+
+    .ticket-img {
+      background: #dfe7ea;
+      min-height: 150px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      padding: 10px;
+    }
+
+    .ticket-img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .ticket-body {
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .ticket-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .ticket-title {
+      display: grid;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .ticket-title strong {
+      font-size: 16px;
+      overflow-wrap: anywhere;
+    }
+
+    .ticket-title span, .meta {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .status {
+      flex: 0 0 auto;
+      border-radius: 999px;
+      padding: 6px 9px;
+      font-size: 12px;
+      font-weight: 700;
+      background: #edf2f4;
+      color: #46545c;
+    }
+
+    .status.pendiente { background: #fff7ed; color: #9a3412; }
+    .status.en-proceso { background: #eff6ff; color: #1d4ed8; }
+    .status.por-liberar { background: #fef3c7; color: #92400e; }
+    .status.rechazado { background: #fee2e2; color: #991b1b; }
+    .status.liberado { background: #ecfdf5; color: #047857; }
+    .status.terminado { background: #ecfdf5; color: #047857; }
+
+    .review-box {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid #fde68a;
+      background: #fffbeb;
+      border-radius: 8px;
+      color: #713f12;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .reject-box {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid #fecaca;
+      background: #fef2f2;
+      border-radius: 8px;
+      color: #7f1d1d;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 6px;
+      padding: 10px;
+      background: #f7fafb;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .timeline-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .timeline-line strong {
+      color: #39474f;
+      font-size: 12px;
+    }
+
+    .ticket p {
+      margin: 0;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+    }
+
+    .ticket-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .mini {
+      min-height: 34px;
+      padding: 7px 10px;
+      font-size: 13px;
+    }
+
+    .empty {
+      border: 1px dashed #b8c4ca;
+      border-radius: 8px;
+      min-height: 180px;
+      display: grid;
+      place-items: center;
+      color: var(--muted);
+      text-align: center;
+      padding: 24px;
+      background: rgba(255,255,255,.55);
+    }
+
+    .hidden { display: none !important; }
+
+    .modal-backdrop, .toast-wrap {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 30;
+    }
+
+    .modal-backdrop {
+      display: grid;
+      place-items: center;
+      background: rgba(16, 24, 32, .48);
+      pointer-events: auto;
+      padding: 18px;
+    }
+
+    .modal {
+      width: min(620px, 100%);
+      background: white;
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      display: grid;
+      overflow: hidden;
+    }
+
+    .modal-head {
+      padding: 16px 18px;
+      border-bottom: 1px solid var(--line);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .modal-head h3 { margin: 0; font-size: 18px; }
+    .modal-body { padding: 18px; display: grid; gap: 14px; }
+    .modal-actions { padding: 14px 18px; border-top: 1px solid var(--line); display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+
+    .toast-wrap {
+      display: flex;
+      align-items: flex-start;
+      justify-content: flex-end;
+      padding: 18px;
+    }
+
+    .toast {
+      width: min(430px, calc(100vw - 36px));
+      background: white;
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--done);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      padding: 14px;
+      display: grid;
+      gap: 6px;
+      pointer-events: auto;
+    }
+
+    .toast strong { font-size: 15px; }
+    .toast span { color: var(--muted); font-size: 13px; line-height: 1.35; }
+
+    @media (max-width: 1040px) {
+      .app-shell { grid-template-columns: 1fr; }
+      aside {
+        position: sticky;
+        top: 0;
+        z-index: 10;
+        padding: 12px;
+        box-shadow: 0 6px 20px rgba(23, 31, 38, .12);
+      }
+      .brand { display: none; }
+      nav {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(92px, 1fr));
+        gap: 8px;
+      }
+      .side-tools {
+        grid-template-columns: repeat(2, 1fr);
+        margin-top: 0;
+      }
+      .work-area { grid-template-columns: 1fr; }
+      .stats { grid-template-columns: repeat(2, minmax(140px, 1fr)); }
+      .role-summary { grid-template-columns: 1fr; }
+    }
+
+    @media (max-width: 680px) {
+      body {
+        background: #f3f7f8;
+      }
+      .access-screen {
+        align-items: start;
+        padding: 18px 14px;
+      }
+      .login-card {
+        padding: 18px;
+        box-shadow: 0 12px 28px rgba(30, 36, 40, .1);
+      }
+      .access-title {
+        text-align: left;
+      }
+      .access-title h1 {
+        font-size: 30px;
+      }
+      .access-title p {
+        margin: 0;
+        font-size: 14px;
+      }
+      .access-card {
+        min-height: 168px;
+        padding: 18px;
+      }
+      .app-shell {
+        display: block;
+        padding-bottom: 84px;
+      }
+      aside {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        top: auto;
+        z-index: 20;
+        padding: 8px 10px;
+        border-top: 1px solid rgba(255,255,255,.16);
+        box-shadow: 0 -8px 24px rgba(23, 31, 38, .14);
+      }
+      .access-current,
+      .side-tools {
+        display: none;
+      }
+      nav {
+        grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
+        gap: 6px;
+      }
+      .nav-button {
+        min-height: 52px;
+        justify-content: center;
+        text-align: center;
+        flex-direction: column;
+        gap: 4px;
+        padding: 8px 4px;
+        font-size: 12px;
+      }
+      .nav-button .count {
+        min-width: 22px;
+        height: 20px;
+      }
+      header {
+        align-items: stretch;
+        flex-direction: column;
+        margin: 10px 10px 0;
+        padding: 14px;
+        position: sticky;
+        top: 8px;
+        z-index: 12;
+        gap: 14px;
+      }
+      .page-title h2 {
+        font-size: 22px;
+      }
+      .page-title p {
+        font-size: 13px;
+      }
+      .content { padding: 12px 12px 18px; }
+      .role-summary {
+        padding: 12px;
+        margin-bottom: 12px;
+      }
+      .header-actions {
+        grid-template-columns: 1fr;
+        justify-content: stretch;
+        gap: 8px;
+      }
+      .header-primary-actions,
+      .header-maintenance-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        justify-content: stretch;
+      }
+      .header-maintenance-actions {
+        padding-left: 0;
+        border-left: 0;
+        padding-top: 8px;
+        border-top: 1px solid var(--line);
+      }
+      .header-actions .btn {
+        width: 100%;
+        min-height: 44px;
+        padding-inline: 10px;
+      }
+      .header-primary-actions .btn:first-child {
+        grid-column: 1 / -1;
+      }
+      .header-switch {
+        display: inline-flex;
+      }
+      .stats {
+        grid-template-columns: repeat(5, minmax(112px, 1fr));
+        overflow-x: auto;
+        gap: 8px;
+        margin-bottom: 12px;
+        padding-bottom: 2px;
+        scroll-snap-type: x mandatory;
+      }
+      .metric {
+        min-height: 78px;
+        padding: 12px;
+        scroll-snap-align: start;
+      }
+      .metric strong {
+        font-size: 24px;
+      }
+      .filters { grid-template-columns: 1fr; }
+      .form-actions { grid-template-columns: 1fr; }
+      .request-head {
+        padding: 16px;
+      }
+      .request-head h3 {
+        font-size: 21px;
+      }
+      .request-grid {
+        padding: 12px 12px 0;
+        gap: 10px;
+      }
+      .form-section {
+        padding: 12px;
+        gap: 10px;
+      }
+      .section-title {
+        display: grid;
+        gap: 3px;
+      }
+      .section-title span {
+        max-width: none;
+        text-align: left;
+      }
+      .project-fields {
+        grid-template-columns: 1fr;
+        gap: 10px;
+      }
+      .admin-layout {
+        grid-template-columns: 1fr;
+      }
+      input, textarea, select {
+        min-height: 44px;
+        font-size: 15px;
+      }
+      textarea {
+        min-height: 88px;
+      }
+      .camera-box {
+        min-height: 0;
+      }
+      .camera-preview {
+        min-height: 150px;
+      }
+      .camera-actions {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        padding: 8px;
+      }
+      .camera-actions .btn {
+        min-height: 44px;
+        padding: 8px 6px;
+        font-size: 13px;
+      }
+      .request-actions {
+        grid-template-columns: 1fr 1fr;
+        padding: 12px;
+        gap: 8px;
+      }
+      .request-actions .btn {
+        min-height: 46px;
+        padding: 9px 8px;
+        font-size: 14px;
+      }
+      .filter-chips {
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        padding-bottom: 2px;
+      }
+      .chip {
+        flex: 0 0 auto;
+      }
+      .quality-review {
+        padding: 12px;
+      }
+      .quality-projects {
+        padding: 12px;
+      }
+      .quality-review .ticket {
+        grid-template-columns: 1fr;
+      }
+      .quality-review .ticket-img {
+        min-height: 150px;
+      }
+      .quality-review .timeline {
+        grid-template-columns: 1fr;
+      }
+      .quality-review-head {
+        align-items: flex-start;
+        display: grid;
+      }
+      .project-grid { grid-template-columns: 1fr; }
+      .project-card {
+        min-height: 112px;
+      }
+      .ticket { grid-template-columns: 1fr; }
+      .ticket-img { min-height: 180px; }
+      .ticket-body {
+        padding: 12px;
+      }
+      .ticket-top {
+        display: grid;
+      }
+      .ticket-actions .btn,
+      .ticket-actions a {
+        flex: 1 1 100%;
+      }
+      .panel {
+        padding: 14px;
+      }
+      .camera-preview {
+        min-height: 190px;
+      }
+      .access-grid { grid-template-columns: 1fr; }
+      .access-card { min-height: 168px; }
+    }
+  </style>
+</head>
+<body>
+  <section class="access-screen" id="accessScreen">
+    <div class="access-panel">
+      <div class="access-title">
+        <h1>Seguimiento Calidad y Obra</h1>
+        <p>Inicia sesion con tu usuario o correo y contrasena. El acceso puede ser Obra, Calidad o Admin.</p>
+      </div>
+      <form class="login-card" id="loginForm">
+        <h2>Iniciar sesion</h2>
+        <p>Tu cuenta define si entras como Obra, Calidad o Administrador.</p>
+        <label>
+          Usuario o correo
+          <input id="loginEmail" autocomplete="username" required placeholder="usuario o correo@empresa.com">
+        </label>
+        <label>
+          Contrasena
+          <input id="loginPassword" type="password" autocomplete="current-password" required placeholder="Contrasena">
+        </label>
+        <div class="login-error" id="loginError"></div>
+        <button class="btn" type="submit">Entrar</button>
+      </form>
+    </div>
+  </section>
+
+  <div class="app-shell hidden" id="appShell">
+    <aside>
+      <div class="brand">
+        <h1>Calidad y Obra</h1>
+        <span>Seguimiento fotografico de actividades</span>
+      </div>
+      <div class="access-current">
+        <span>Acceso activo</span>
+        <strong id="currentAccessLabel">Calidad</strong>
+      </div>
+      <nav aria-label="Secciones">
+        <button class="nav-button" data-view="nueva">
+          <span>Nueva</span>
+          <span class="count">+</span>
+        </button>
+        <button class="nav-button active" data-view="calidad">
+          <span>Dashboard</span>
+          <span class="count" id="qualityCount">0</span>
+        </button>
+        <button class="nav-button" data-view="obra">
+          <span>Obra</span>
+          <span class="count" id="siteCount">0</span>
+        </button>
+        <button class="nav-button" data-view="reportes">
+          <span>Reportes</span>
+          <span class="count" id="reportCount">0</span>
+        </button>
+        <button class="nav-button" data-view="admin">
+          <span>Admin</span>
+          <span class="count" id="userCount">0</span>
+        </button>
+      </nav>
+      <div class="side-tools">
+        <button class="ghost-side primary" id="switchAccessBtn">Cambiar acceso</button>
+        <button class="ghost-side primary" id="exportCsvBtn">Exportar CSV</button>
+        <button class="ghost-side muted" id="exportJsonBtn">Exportar JSON</button>
+      </div>
+    </aside>
+
+    <main>
+      <header>
+        <div class="page-title">
+          <h2 id="viewTitle">Solicitudes de Calidad</h2>
+          <p id="viewSubtitle">Alta de actividades, fotografia inicial y seguimiento hasta cierre.</p>
+        </div>
+        <div class="header-actions">
+          <div class="header-primary-actions">
+            <button class="btn" id="newRequestBtn">Nueva solicitud</button>
+            <button class="btn secondary" id="manageProjectsBtn">Obras</button>
+          </div>
+          <div class="header-maintenance-actions">
+            <button class="btn secondary header-switch" id="headerSwitchAccessBtn">Cambiar acceso</button>
+            <button class="btn danger" id="clearBtn">Limpiar demo</button>
+          </div>
+        </div>
+      </header>
+
+      <section class="content">
+        <div class="role-summary" id="roleSummary">
+          <div>
+            <strong id="roleSummaryTitle">Acceso Calidad</strong>
+            <span id="roleSummaryText">Levanta solicitudes y da seguimiento a las actividades abiertas.</span>
+          </div>
+        </div>
+
+        <div class="stats" id="dashboardStats">
+          <button class="metric" type="button" data-dashboard-filter="total">
+            <strong id="statTotal">0</strong>
+            <span>Total de solicitudes</span>
+          </button>
+          <button class="metric" type="button" data-dashboard-filter="pendiente">
+            <strong id="statPending">0</strong>
+            <span>Pendientes</span>
+          </button>
+          <button class="metric" type="button" data-dashboard-filter="en-proceso">
+            <strong id="statProgress">0</strong>
+            <span>En proceso</span>
+          </button>
+          <button class="metric" type="button" data-dashboard-filter="por-liberar">
+            <strong id="statReview">0</strong>
+            <span>Por liberar</span>
+          </button>
+          <button class="metric" type="button" data-dashboard-filter="liberado">
+            <strong id="statDone">0</strong>
+            <span>Liberadas</span>
+          </button>
+        </div>
+
+        <section class="panel dashboard-filter-panel hidden" id="dashboardFilterPanel">
+          <div class="list-head">
+            <div>
+              <h3 id="dashboardFilterTitle">Solicitudes filtradas</h3>
+              <span class="meta" id="dashboardFilterSubtitle">Filtro activo desde dashboard.</span>
+            </div>
+            <button class="btn secondary mini" id="clearDashboardFilterBtn">Limpiar filtro</button>
+          </div>
+          <div class="list" id="dashboardFilterList"></div>
+        </section>
+
+        <section id="nuevaView" class="new-request-screen hidden">
+          <form class="panel request-form" id="requestForm">
+            <div class="request-head">
+              <div>
+                <span class="eyebrow">Calidad</span>
+                <h3>Nueva solicitud</h3>
+                <p class="panel-subtitle">Captura la obra, la actividad y la evidencia inicial.</p>
+              </div>
+            </div>
+
+            <div class="form-grid request-grid">
+              <div class="form-section">
+                <div class="section-title">
+                  <strong>Obra</strong>
+                  <span>Selecciona una existente o escribe una nueva.</span>
+                </div>
+                <div class="project-fields">
+                  <label>
+                    Obra o garantia existente
+                    <select id="obraSelect"></select>
+                  </label>
+                  <label>
+                    Nueva obra o garantia
+                    <input id="obraNueva" type="text" placeholder="Ej. Casa Bosques Lote 12">
+                  </label>
+                  <label>
+                    Tipo
+                    <select id="projectType">
+                      <option value="obra">Obra</option>
+                      <option value="garantia">Garantia</option>
+                    </select>
+                  </label>
+                  <label>
+                    Costo garantia
+                    <input id="warrantyCost" type="number" min="0" step="0.01" placeholder="0.00">
+                  </label>
+                </div>
+              </div>
+
+              <div class="form-section">
+                <div class="section-title">
+                  <strong>Actividad</strong>
+                  <span>Describe con claridad lo que debe atender Obra.</span>
+                </div>
+                <label>
+                  Fecha de solicitud
+                  <input id="requestDate" type="date" required>
+                </label>
+                <label>
+                  Descripcion a realizar
+                  <textarea id="description" required placeholder="Ej. Corregir boquilla de ventana en recamara principal."></textarea>
+                </label>
+              </div>
+
+              <div class="form-section photo-section">
+                <div class="section-title">
+                  <strong>Evidencia inicial</strong>
+                  <span>Foto tomada por Calidad.</span>
+                </div>
+                <div class="camera-box" data-camera="quality">
+                  <div class="camera-preview" id="qualityPreview">Sin fotografia</div>
+                  <div class="camera-actions">
+                    <button type="button" class="btn" data-capture="quality">Tomar foto</button>
+                    <input class="hidden" id="qualityFile" type="file" accept="image/*" capture="environment">
+                    <button type="button" class="btn secondary" data-upload="quality">Subir foto</button>
+                    <button type="button" class="btn secondary" data-clear-photo="quality">Quitar</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="form-actions request-actions">
+              <button class="btn primary-action" type="submit" name="submitAction" value="finish">Crear y finalizar</button>
+              <button class="btn secondary continue-action" type="submit" name="submitAction" value="continue">Crear otra en esta obra</button>
+              <button class="btn secondary" type="reset">Limpiar</button>
+              <button class="btn secondary" type="button" id="backToQualityFromNew">Volver a seguimiento</button>
+            </div>
+          </form>
+        </section>
+
+        <section id="calidadView">
+          <div class="quality-board">
+            <div class="quality-review">
+              <div class="quality-review-head">
+                <h3>Bandeja de liberacion</h3>
+                <span id="reviewCountLabel">0 por revisar</span>
+              </div>
+              <div class="list" id="reviewList"></div>
+            </div>
+
+            <div class="quality-projects" id="qualityProjectDirectory">
+              <div class="list-head">
+                <h3>Seguimiento por obra</h3>
+              </div>
+              <div class="project-grid" id="qualityProjectGrid"></div>
+            </div>
+
+            <div id="qualityProjectDetail" class="hidden">
+              <div class="detail-head">
+                <div>
+                  <h3 id="qualitySelectedProjectTitle">Solicitudes</h3>
+                  <span class="meta">Solo se muestran solicitudes de esta obra.</span>
+                </div>
+                <div class="detail-actions">
+                  <button class="btn secondary mini" id="exportQualityProjectPdfBtn">Exportar PDF</button>
+                  <button class="btn secondary mini" id="backToQualityProjectsBtn">Ver obras</button>
+                </div>
+              </div>
+              <div class="filter-chips" aria-label="Filtros de calidad">
+                <button class="chip" type="button" data-quality-filter="por-liberar">Por liberar</button>
+                <button class="chip active" type="button" data-quality-filter="abiertas">Abiertas</button>
+                <button class="chip" type="button" data-quality-filter="pendiente">Pendientes</button>
+                <button class="chip" type="button" data-quality-filter="rechazado">Rechazadas</button>
+                <button class="chip" type="button" data-quality-filter="liberado">Liberadas</button>
+                <button class="chip" type="button" data-quality-filter="todos">Todas</button>
+              </div>
+              <div class="filters">
+                <input id="qualitySearch" type="search" placeholder="Buscar descripcion">
+                <select id="qualityStatus">
+                  <option value="abiertas">Abiertas</option>
+                  <option value="por-liberar">Por liberar</option>
+                  <option value="todos">Todos</option>
+                  <option value="pendiente">Pendientes</option>
+                  <option value="en-proceso">En proceso</option>
+                  <option value="rechazado">Rechazadas</option>
+                  <option value="liberado">Liberadas</option>
+                </select>
+              </div>
+              <div class="list" id="qualityList"></div>
+            </div>
+
+            <div class="quality-projects">
+              <div class="list-head">
+                <div>
+                  <h3>Historial liberado</h3>
+                  <span class="meta">Actividades cerradas y listas para consultar o reportar.</span>
+                </div>
+              </div>
+              <div class="filters">
+                <input id="archiveSearch" type="search" placeholder="Buscar actividad liberada">
+                <select id="archiveProjectFilter"></select>
+              </div>
+              <div class="list" id="archiveList"></div>
+            </div>
+          </div>
+        </section>
+
+        <section id="obraView" class="hidden">
+          <div id="projectDirectory">
+            <div class="list-head">
+              <h3>Selecciona una obra</h3>
+            </div>
+            <div class="project-grid" id="projectGrid"></div>
+          </div>
+          <div id="projectDetail" class="hidden">
+            <div class="detail-head">
+              <div>
+                <h3 id="selectedProjectTitle">Pendientes</h3>
+                <span class="meta">Solo se muestran las actividades abiertas de esta obra.</span>
+              </div>
+              <div class="detail-actions">
+                <button class="btn secondary mini" id="exportSiteProjectPdfBtn">Exportar PDF</button>
+                <button class="btn secondary mini" id="backToProjectsBtn">Ver obras</button>
+              </div>
+            </div>
+            <div class="filters">
+              <input id="siteSearch" type="search" placeholder="Buscar actividad">
+            </div>
+            <div class="list" id="siteList"></div>
+          </div>
+        </section>
+
+        <section id="archivoView" class="hidden"></section>
+
+        <section id="reportesView" class="hidden">
+          <div class="panel">
+            <div class="list-head">
+              <div>
+                <h3>Reportes comparativos</h3>
+                <span class="meta">Compara lo solicitado por Calidad contra lo atendido por Obra. Sirve para PDF interno o para cliente.</span>
+              </div>
+              <button class="btn mini" id="exportReportsPdfBtn">Exportar PDF general</button>
+            </div>
+            <div class="filters">
+              <select id="reportProjectFilter"></select>
+              <select id="reportTypeFilter">
+                <option value="todos">Obras y garantias</option>
+                <option value="obra">Solo obras</option>
+                <option value="garantia">Solo garantias</option>
+              </select>
+            </div>
+            <div class="list" id="reportList"></div>
+          </div>
+        </section>
+
+        <section id="adminView" class="hidden">
+          <div class="admin-layout">
+            <form class="panel" id="userForm">
+              <h3>Crear usuario</h3>
+              <p class="panel-subtitle">Cada acceso queda ligado a un correo, rol y contrasena.</p>
+              <div class="form-grid">
+                <label>
+                  Nombre
+                  <input id="userName" required placeholder="Ej. Juan Perez">
+                </label>
+                <label>
+                  Usuario
+                  <input id="userUsername" required placeholder="Ej. jperez">
+                </label>
+                <label>
+                  Correo
+                  <input id="userEmail" type="email" required placeholder="usuario@empresa.com">
+                </label>
+                <label>
+                  Rol
+                  <select id="userRole" required>
+                    <option value="obra">Obra</option>
+                    <option value="calidad">Calidad</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </label>
+                <label>
+                  Contrasena
+                  <input id="userPassword" type="text" required placeholder="Contrasena temporal">
+                </label>
+              </div>
+              <div class="form-actions">
+                <button class="btn" type="submit">Guardar usuario</button>
+                <button class="btn secondary" type="reset">Limpiar</button>
+              </div>
+            </form>
+            <div class="panel">
+              <h3>Usuarios</h3>
+              <p class="panel-subtitle">Admin puede recuperar o cambiar contrasenas cuando alguien las olvide.</p>
+              <div class="list" id="userList"></div>
+            </div>
+          </div>
+        </section>
+      </section>
+    </main>
+  </div>
+
+  <div id="completeModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <form class="modal" id="completeForm">
+      <div class="modal-head">
+        <h3>Reportar trabajo atendido</h3>
+        <button type="button" class="btn icon secondary" id="closeCompleteModal" aria-label="Cerrar">x</button>
+      </div>
+      <div class="modal-body">
+        <input type="hidden" id="completeId">
+        <label>
+          Fecha de atencion
+          <input id="completeDate" type="date" required>
+        </label>
+        <label>
+          Comentario de obra
+          <textarea id="completeNote" placeholder="Opcional"></textarea>
+        </label>
+        <div>
+          <label>Fotografia de terminacion</label>
+          <div class="camera-box" data-camera="done">
+            <div class="camera-preview" id="donePreview">Sin fotografia</div>
+            <div class="camera-actions">
+              <button type="button" class="btn done" data-capture="done">Tomar foto</button>
+              <input class="hidden" id="doneFile" type="file" accept="image/*" capture="environment">
+              <button type="button" class="btn secondary" data-upload="done">Subir foto</button>
+              <button type="button" class="btn secondary" data-clear-photo="done">Quitar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn secondary" id="cancelComplete">Cancelar</button>
+        <button type="submit" class="btn done">Enviar a Calidad</button>
+      </div>
+    </form>
+  </div>
+
+  <div class="toast-wrap hidden" id="toastWrap">
+    <div class="toast">
+      <strong id="toastTitle">Aviso</strong>
+      <span id="toastMessage"></span>
+      <div class="ticket-actions">
+        <a class="btn mini" id="toastMail" href="#">Preparar correo</a>
+        <button class="btn mini secondary" id="toastClose">Cerrar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="projectsModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <form class="modal" id="projectsForm">
+      <div class="modal-head">
+        <h3>Catalogo de obras</h3>
+        <button type="button" class="btn icon secondary" id="closeProjectsModal" aria-label="Cerrar">x</button>
+      </div>
+      <div class="modal-body">
+        <label>
+          Obras y garantias disponibles
+          <textarea id="projectsText" rows="8"></textarea>
+        </label>
+        <div class="login-help">Formato por linea: Nombre | obra o garantia | costo. Ejemplo: Casa Roble | garantia | 2500</div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn secondary" id="cancelProjects">Cancelar</button>
+        <button type="submit" class="btn">Guardar obras</button>
+      </div>
+    </form>
+  </div>
+
+  <canvas id="canvas" class="hidden"></canvas>
+
+  <script>
+    const STORAGE_KEY = 'tdc_calidad_obras_v1';
+    const PROJECTS_KEY = 'tdc_calidad_obras_projects_v1';
+    const ACCESS_KEY = 'tdc_calidad_obras_access_v1';
+    const SESSION_KEY = 'tdc_calidad_obras_session_v1';
+    const USERS_KEY = 'tdc_calidad_obras_users_v1';
+    const MAIL_TO = 'calidad@tdcasas.com';
+    const DEMO_PROJECTS = [
+      'Casa Muestra',
+      'Obra Norte',
+      'Obra Sur',
+      'Residencial Encino',
+      'Residencial La Loma'
+    ];
+    const DEFAULT_PROJECTS = [];
+    const DEFAULT_USERS = [
+      { id: 'USR-ADMIN', name: 'Administrador', username: 'admin', email: 'admin@tdcasas.com', role: 'admin', password: 'admin123' }
+    ];
+
+    const state = {
+      currentUser: loadSession(),
+      users: loadUsers(),
+      access: '',
+      view: 'calidad',
+      qualitySelectedProject: '',
+      selectedProject: '',
+      dashboardFilter: '',
+      requests: loadRequests(),
+      projects: loadProjects(),
+      photos: { quality: '', done: '' },
+      streams: { quality: null, done: null },
+      lastKnownCompleted: getLastKnownCompleted()
+    };
+
+    const els = {
+      accessScreen: document.getElementById('accessScreen'),
+      appShell: document.getElementById('appShell'),
+      loginForm: document.getElementById('loginForm'),
+      loginEmail: document.getElementById('loginEmail'),
+      loginPassword: document.getElementById('loginPassword'),
+      loginError: document.getElementById('loginError'),
+      currentAccessLabel: document.getElementById('currentAccessLabel'),
+      roleSummaryTitle: document.getElementById('roleSummaryTitle'),
+      roleSummaryText: document.getElementById('roleSummaryText'),
+      dashboardFilterPanel: document.getElementById('dashboardFilterPanel'),
+      dashboardFilterTitle: document.getElementById('dashboardFilterTitle'),
+      dashboardFilterSubtitle: document.getElementById('dashboardFilterSubtitle'),
+      dashboardFilterList: document.getElementById('dashboardFilterList'),
+      requestForm: document.getElementById('requestForm'),
+      obraSelect: document.getElementById('obraSelect'),
+      obraNueva: document.getElementById('obraNueva'),
+      projectType: document.getElementById('projectType'),
+      warrantyCost: document.getElementById('warrantyCost'),
+      requestDate: document.getElementById('requestDate'),
+      description: document.getElementById('description'),
+      qualityPreview: document.getElementById('qualityPreview'),
+      qualityFile: document.getElementById('qualityFile'),
+      donePreview: document.getElementById('donePreview'),
+      doneFile: document.getElementById('doneFile'),
+      qualityList: document.getElementById('qualityList'),
+      reviewList: document.getElementById('reviewList'),
+      reviewCountLabel: document.getElementById('reviewCountLabel'),
+      qualityProjectDirectory: document.getElementById('qualityProjectDirectory'),
+      qualityProjectDetail: document.getElementById('qualityProjectDetail'),
+      qualityProjectGrid: document.getElementById('qualityProjectGrid'),
+      qualitySelectedProjectTitle: document.getElementById('qualitySelectedProjectTitle'),
+      siteList: document.getElementById('siteList'),
+      archiveList: document.getElementById('archiveList'),
+      qualitySearch: document.getElementById('qualitySearch'),
+      siteSearch: document.getElementById('siteSearch'),
+      archiveSearch: document.getElementById('archiveSearch'),
+      qualityStatus: document.getElementById('qualityStatus'),
+      projectDirectory: document.getElementById('projectDirectory'),
+      projectDetail: document.getElementById('projectDetail'),
+      projectGrid: document.getElementById('projectGrid'),
+      selectedProjectTitle: document.getElementById('selectedProjectTitle'),
+      archiveProjectFilter: document.getElementById('archiveProjectFilter'),
+      reportProjectFilter: document.getElementById('reportProjectFilter'),
+      reportTypeFilter: document.getElementById('reportTypeFilter'),
+      reportList: document.getElementById('reportList'),
+      completeModal: document.getElementById('completeModal'),
+      completeForm: document.getElementById('completeForm'),
+      completeId: document.getElementById('completeId'),
+      completeDate: document.getElementById('completeDate'),
+      completeNote: document.getElementById('completeNote'),
+      toastWrap: document.getElementById('toastWrap'),
+      toastTitle: document.getElementById('toastTitle'),
+      toastMessage: document.getElementById('toastMessage'),
+      toastMail: document.getElementById('toastMail'),
+      projectsModal: document.getElementById('projectsModal'),
+      projectsText: document.getElementById('projectsText'),
+      userForm: document.getElementById('userForm'),
+      userName: document.getElementById('userName'),
+      userUsername: document.getElementById('userUsername'),
+      userEmail: document.getElementById('userEmail'),
+      userRole: document.getElementById('userRole'),
+      userPassword: document.getElementById('userPassword'),
+      userList: document.getElementById('userList'),
+      canvas: document.getElementById('canvas')
+    };
+
+    applySession();
+
+    function loadRequests() {
+      try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+      catch { return []; }
+    }
+
+    function loadUsers() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(USERS_KEY));
+        if (Array.isArray(saved) && saved.length) return normalizeUsers(saved);
+      } catch {}
+      localStorage.setItem(USERS_KEY, JSON.stringify(DEFAULT_USERS));
+      return DEFAULT_USERS.slice();
+    }
+
+    function normalizeUsers(users) {
+      const normalized = users.map(user => ({
+        ...user,
+        username: user.username || (user.email === 'admin@tdcasas.com' ? 'admin' : String(user.email || '').split('@')[0])
+      }));
+      localStorage.setItem(USERS_KEY, JSON.stringify(normalized));
+      return normalized;
+    }
+
+    function saveUsers() {
+      localStorage.setItem(USERS_KEY, JSON.stringify(state.users));
+    }
+
+    function loadSession() {
+      try { return JSON.parse(localStorage.getItem(SESSION_KEY)); }
+      catch { return null; }
+    }
+
+    function saveSession(user) {
+      const session = user ? { id: user.id, name: user.name, username: user.username || user.email, email: user.email, role: user.role } : null;
+      if (session) localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+      else localStorage.removeItem(SESSION_KEY);
+      state.currentUser = session;
+      applySession();
+    }
+
+    function applySession() {
+      state.access = state.currentUser?.role || '';
+      if (state.access === 'obra') state.view = 'obra';
+      else if (state.access === 'admin') state.view = 'admin';
+      else state.view = 'calidad';
+      localStorage.setItem(ACCESS_KEY, state.access || '');
+    }
+
+    function loadProjects() {
+      try {
+        const saved = JSON.parse(localStorage.getItem(PROJECTS_KEY));
+        if (!Array.isArray(saved)) return DEFAULT_PROJECTS;
+        return cleanProjectList(saved);
+      } catch {
+        return DEFAULT_PROJECTS;
+      }
+    }
+
+    function cleanProjectList(projects) {
+      const used = new Set(loadRequests().map(item => item.project).filter(Boolean));
+      const map = new Map();
+      projects.forEach(item => {
+        const project = normalizeProject(item);
+        if (!project.name) return;
+        if (DEMO_PROJECTS.includes(project.name) && !used.has(project.name)) return;
+        map.set(project.name, project);
+      });
+      return [...map.values()].sort((a, b) => a.name.localeCompare(b.name));
+    }
+
+    function normalizeProject(item) {
+      if (typeof item === 'string') return { name: item.trim(), type: 'obra', cost: 0 };
+      return {
+        name: String(item?.name || item?.project || '').trim(),
+        type: item?.type === 'garantia' ? 'garantia' : 'obra',
+        cost: Number(item?.cost || 0)
+      };
+    }
+
+    function projectName(project) {
+      return typeof project === 'string' ? project : project.name;
+    }
+
+    function projectMeta(name) {
+      return state.projects.find(project => projectName(project) === name) || { name, type: 'obra', cost: 0 };
+    }
+
+    function projectExists(name) {
+      return state.projects.some(project => projectName(project) === name);
+    }
+
+    function saveRequests() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state.requests));
+      localStorage.setItem('tdc_calidad_obras_done_count', String(state.requests.filter(isReleased).length));
+    }
+
+    function saveProjects() {
+      localStorage.setItem(PROJECTS_KEY, JSON.stringify(state.projects));
+    }
+
+    function getLastKnownCompleted() {
+      return Number(localStorage.getItem('tdc_calidad_obras_done_count') || 0);
+    }
+
+    function today() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function makeId() {
+      return 'SOL-' + Date.now().toString(36).toUpperCase();
+    }
+
+    function formatDate(value) {
+      if (!value) return 'Sin fecha';
+      const [year, month, day] = value.split('-');
+      return `${day}/${month}/${year}`;
+    }
+
+    function statusLabel(status) {
+      return {
+        'pendiente': 'Pendiente',
+        'en-proceso': 'En proceso',
+        'por-liberar': 'Por liberar',
+        'rechazado': 'Rechazado',
+        'liberado': 'Liberado',
+        'terminado': 'Liberado'
+      }[status] || status;
+    }
+
+    function statusClass(status) {
+      return String(status).replace(/\s+/g, '-');
+    }
+
+    function countByStatus(status) {
+      return state.requests.filter(item => item.status === status).length;
+    }
+
+    function isReleased(item) {
+      return item.status === 'liberado' || item.status === 'terminado';
+    }
+
+    function isOpen(item) {
+      return !isReleased(item);
+    }
+
+    function renderProjectOptions() {
+      if (state.selectedProject && !projectExists(state.selectedProject)) state.selectedProject = '';
+      if (state.qualitySelectedProject && !projectExists(state.qualitySelectedProject)) state.qualitySelectedProject = '';
+      const options = state.projects.map(project => `<option value="${escapeAttr(project.name)}">${escapeHtml(project.name)} (${project.type === 'garantia' ? 'Garantia' : 'Obra'})</option>`).join('');
+      els.obraSelect.innerHTML = state.projects.length
+        ? '<option value="">Selecciona existente</option>' + options
+        : '<option value="">Sin obras o garantias</option>';
+      els.archiveProjectFilter.innerHTML = '<option value="todos">Todas las obras y garantias</option>' + options;
+      els.reportProjectFilter.innerHTML = '<option value="todos">Todas las obras y garantias</option>' + options;
+    }
+
+    function renderStats() {
+      document.getElementById('statTotal').textContent = state.requests.length;
+      document.getElementById('statPending').textContent = countByStatus('pendiente');
+      document.getElementById('statProgress').textContent = countByStatus('en-proceso');
+      document.getElementById('statReview').textContent = countByStatus('por-liberar');
+      document.getElementById('statDone').textContent = state.requests.filter(isReleased).length;
+      document.getElementById('qualityCount').textContent = state.requests.filter(isOpen).length;
+      document.getElementById('siteCount').textContent = state.requests.filter(item => ['pendiente', 'en-proceso', 'rechazado'].includes(item.status)).length;
+      document.getElementById('reportCount').textContent = state.requests.length;
+      document.querySelectorAll('[data-dashboard-filter]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.dashboardFilter === state.dashboardFilter);
+      });
+    }
+
+    function render() {
+      renderProjectOptions();
+      renderStats();
+      renderDashboardFilter();
+      renderAccessState();
+      renderReviewQueue();
+      renderQualityList();
+      renderSiteList();
+      renderArchiveList();
+      renderReports();
+      renderUsers();
+      updateViewText();
+    }
+
+    function roleLabel(role) {
+      return { calidad: 'Calidad', obra: 'Obra', admin: 'Admin' }[role] || 'Sin acceso';
+    }
+
+    function renderDashboardFilter() {
+      const hidden = !state.dashboardFilter || ['nueva', 'admin', 'reportes'].includes(state.view);
+      els.dashboardFilterPanel.classList.toggle('hidden', hidden);
+      if (hidden) return;
+      const items = dashboardFilteredItems(state.dashboardFilter);
+      els.dashboardFilterTitle.textContent = dashboardFilterTitle(state.dashboardFilter);
+      els.dashboardFilterSubtitle.textContent = `${items.length} solicitudes encontradas.`;
+      els.dashboardFilterList.innerHTML = items.length ? items.map(ticketMarkup).join('') : emptyMarkup('No hay solicitudes con este filtro.');
+    }
+
+    function dashboardFilteredItems(filter) {
+      const items = state.requests.slice().sort(sortNewest);
+      if (filter === 'total') return items;
+      if (filter === 'liberado') return items.filter(isReleased);
+      return items.filter(item => item.status === filter);
+    }
+
+    function dashboardFilterTitle(filter) {
+      return {
+        total: 'Todas las solicitudes',
+        pendiente: 'Solicitudes pendientes',
+        'en-proceso': 'Solicitudes en proceso',
+        'por-liberar': 'Solicitudes por liberar',
+        liberado: 'Solicitudes liberadas'
+      }[filter] || 'Solicitudes filtradas';
+    }
+
+    function setDashboardFilter(filter) {
+      state.dashboardFilter = state.dashboardFilter === filter ? '' : filter;
+      if (state.access === 'calidad') setView('calidad');
+      else if (state.access === 'obra') setView('obra');
+      render();
+    }
+
+    function updateViewText() {
+      const titles = {
+        nueva: ['Nueva solicitud', 'Alta de actividad con obra, descripcion, fecha y fotografia inicial.'],
+        calidad: ['Dashboard', 'Seguimiento general, liberaciones, obras, garantias e historial.'],
+        obra: ['Obra', 'Pendientes asignados por Calidad para ejecutar y cerrar con evidencia.'],
+        archivo: ['Dashboard', 'Seguimiento general, liberaciones, obras, garantias e historial.'],
+        reportes: ['Reportes', 'Comparativo Calidad vs Obra para PDF y relacion a cliente.'],
+        admin: ['Admin', 'Usuarios, correos, roles y recuperacion de contrasenas.']
+      };
+      document.getElementById('viewTitle').textContent = titles[state.view][0];
+      document.getElementById('viewSubtitle').textContent = titles[state.view][1];
+    }
+
+    function renderAccessState() {
+      const hasAccess = ['calidad', 'obra', 'admin'].includes(state.access);
+      els.accessScreen.classList.toggle('hidden', hasAccess);
+      els.appShell.classList.toggle('hidden', !hasAccess);
+      if (!hasAccess) return;
+
+      const isQuality = state.access === 'calidad';
+      const isAdmin = state.access === 'admin';
+      els.currentAccessLabel.textContent = `${roleLabel(state.access)} | ${state.currentUser?.email || ''}`;
+      els.roleSummaryTitle.textContent = isAdmin ? 'Administracion de usuarios' : isQuality ? 'Acceso general de Calidad' : 'Acceso general de Obra';
+      els.roleSummaryText.textContent = isAdmin
+        ? 'Puedes crear usuarios, asignar roles y restablecer contrasenas.'
+        : isQuality
+          ? 'Puedes levantar solicitudes, revisar todas las obras, exportar informacion y administrar el catalogo.'
+          : 'Puedes consultar pendientes de todas las obras, filtrar por obra y confirmar trabajos terminados con foto.';
+
+      document.querySelector('[data-view="nueva"]').classList.toggle('hidden', !isQuality);
+      document.querySelector('[data-view="calidad"]').classList.toggle('hidden', !isQuality);
+      document.querySelector('[data-view="obra"]').classList.toggle('hidden', state.access !== 'obra');
+      document.querySelector('[data-view="reportes"]').classList.toggle('hidden', !isQuality);
+      document.querySelector('[data-view="admin"]').classList.toggle('hidden', !isAdmin);
+      document.getElementById('newRequestBtn').classList.toggle('hidden', !isQuality);
+      document.getElementById('manageProjectsBtn').classList.toggle('hidden', !isQuality);
+      document.getElementById('clearBtn').classList.toggle('hidden', !isQuality);
+      document.getElementById('exportJsonBtn').classList.toggle('hidden', !isQuality);
+      document.getElementById('exportCsvBtn').classList.toggle('hidden', !isQuality);
+      document.getElementById('userCount').textContent = state.users.length;
+    }
+
+    function renderQualityList() {
+      renderQualityProjectDirectory();
+      els.qualityProjectDirectory.classList.toggle('hidden', Boolean(state.qualitySelectedProject));
+      els.qualityProjectDetail.classList.toggle('hidden', !state.qualitySelectedProject);
+      if (!state.qualitySelectedProject) {
+        els.qualityList.innerHTML = '';
+        return;
+      }
+
+      const query = els.qualitySearch.value.trim().toLowerCase();
+      const filter = els.qualityStatus.value;
+      let items = state.requests.slice().sort(sortNewest);
+      items = items.filter(item => item.project === state.qualitySelectedProject);
+      if (filter === 'abiertas') items = items.filter(isOpen);
+      if (['pendiente', 'en-proceso', 'por-liberar', 'rechazado', 'liberado'].includes(filter)) {
+        items = filter === 'liberado' ? items.filter(isReleased) : items.filter(item => item.status === filter);
+      }
+      items = searchItems(items, query);
+      els.qualitySelectedProjectTitle.textContent = `${state.qualitySelectedProject} | ${qualityTitle(filter)}`;
+      syncQualityChips(filter);
+      els.qualityList.innerHTML = items.length ? items.map(ticketMarkup).join('') : emptyMarkup('No hay solicitudes con esos filtros.');
+    }
+
+    function renderQualityProjectDirectory() {
+      const card = project => {
+        const name = projectName(project);
+        const all = state.requests.filter(item => item.project === name);
+        const open = all.filter(isOpen);
+        const review = all.filter(item => item.status === 'por-liberar').length;
+        const rejected = all.filter(item => item.status === 'rechazado').length;
+        const released = all.filter(isReleased).length;
+        const cost = warrantyTotal(name);
+        return `
+          <button class="project-card" data-open-quality-project="${escapeAttr(name)}">
+            <span class="project-count">${open.length}</span>
+            <strong>${escapeHtml(name)}</strong>
+            <span>${project.type === 'garantia' ? 'Garantia' : 'Obra'}${project.type === 'garantia' ? ` | Costo: ${money(cost)}` : ''}</span>
+            <span>${review} por liberar | ${rejected} rechazadas | ${released} liberadas</span>
+          </button>
+        `;
+      };
+      els.qualityProjectGrid.innerHTML = groupedProjectsMarkup(card);
+    }
+
+    function renderReviewQueue() {
+      const items = state.requests.filter(item => item.status === 'por-liberar').sort(sortNewest);
+      els.reviewCountLabel.textContent = `${items.length} por revisar`;
+      els.reviewList.innerHTML = items.length ? items.map(ticketMarkup).join('') : emptyMarkup('No hay trabajos esperando liberacion.');
+    }
+
+    function qualityTitle(filter) {
+      return {
+        'por-liberar': 'Por liberar',
+        abiertas: 'Solicitudes abiertas',
+        todos: 'Todas las solicitudes',
+        pendiente: 'Pendientes',
+        'en-proceso': 'En proceso',
+        rechazado: 'Rechazadas',
+        liberado: 'Liberadas'
+      }[filter] || 'Solicitudes';
+    }
+
+    function syncQualityChips(filter) {
+      document.querySelectorAll('[data-quality-filter]').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.qualityFilter === filter);
+      });
+    }
+
+    function renderSiteList() {
+      renderProjectDirectory();
+      els.projectDirectory.classList.toggle('hidden', Boolean(state.selectedProject));
+      els.projectDetail.classList.toggle('hidden', !state.selectedProject);
+      if (!state.selectedProject) {
+        els.siteList.innerHTML = '';
+        return;
+      }
+
+      const query = els.siteSearch.value.trim().toLowerCase();
+      let items = state.requests.filter(item => ['pendiente', 'en-proceso', 'rechazado'].includes(item.status)).sort(sortOldest);
+      items = items.filter(item => item.project === state.selectedProject);
+      items = searchItems(items, query);
+      els.selectedProjectTitle.textContent = state.selectedProject;
+      els.siteList.innerHTML = items.length ? items.map(siteTicketMarkup).join('') : emptyMarkup('No hay actividades pendientes para esta obra.');
+    }
+
+    function renderProjectDirectory() {
+      const card = project => {
+        const name = projectName(project);
+        const open = state.requests.filter(item => item.project === name && ['pendiente', 'en-proceso', 'rechazado'].includes(item.status));
+        const progress = open.filter(item => item.status === 'en-proceso').length;
+        const label = open.length === 1 ? 'pendiente abierto' : 'pendientes abiertos';
+        return `
+          <button class="project-card" data-open-project="${escapeAttr(name)}">
+            <span class="project-count">${open.length}</span>
+            <strong>${escapeHtml(name)}</strong>
+            <span>${project.type === 'garantia' ? 'Garantia' : 'Obra'}</span>
+            <span>${open.length} ${label}${progress ? ` | ${progress} en proceso` : ''}</span>
+          </button>
+        `;
+      };
+      els.projectGrid.innerHTML = groupedProjectsMarkup(card);
+    }
+
+    function groupedProjectsMarkup(cardFn) {
+      if (!state.projects.length) return emptyMarkup('No hay obras o garantias registradas.');
+      const obras = state.projects.filter(project => project.type !== 'garantia');
+      const garantias = state.projects.filter(project => project.type === 'garantia');
+      return [
+        obras.length ? `<div class="project-group"><h4 class="project-group-title">Obras</h4><div class="project-grid">${obras.map(cardFn).join('')}</div></div>` : '',
+        garantias.length ? `<div class="project-group"><h4 class="project-group-title">Garantias</h4><div class="project-grid">${garantias.map(cardFn).join('')}</div></div>` : ''
+      ].join('');
+    }
+
+    function renderArchiveList() {
+      const query = els.archiveSearch.value.trim().toLowerCase();
+      const project = els.archiveProjectFilter.value;
+      let items = state.requests.filter(isReleased).sort(sortNewest);
+      if (project !== 'todos') items = items.filter(item => item.project === project);
+      items = searchItems(items, query);
+      els.archiveList.innerHTML = items.length ? items.map(ticketMarkup).join('') : emptyMarkup('Todavia no hay actividades terminadas.');
+    }
+
+    function renderReports() {
+      const project = els.reportProjectFilter.value || 'todos';
+      const type = els.reportTypeFilter.value || 'todos';
+      let items = state.requests.slice().sort(sortOldest);
+      if (project !== 'todos') items = items.filter(item => item.project === project);
+      if (type !== 'todos') items = items.filter(item => requestType(item) === type);
+      els.reportList.innerHTML = items.length
+        ? reportExecutiveDashboard(items) + items.map(reportMarkup).join('')
+        : emptyMarkup('No hay informacion para el reporte.');
+    }
+
+    function reportExecutiveDashboard(items) {
+      const works = items.filter(item => requestType(item) !== 'garantia');
+      const warranties = items.filter(item => requestType(item) === 'garantia');
+      return `
+        <div class="executive-report">
+          <h3>Dashboard directivo</h3>
+          <div class="stats">
+            ${executiveDashboardCard('Obras', works, 'obra')}
+            ${executiveDashboardCard('Garantias', warranties, 'garantia', true)}
+          </div>
+        </div>
+      `;
+    }
+
+    function executiveDashboardCard(title, items, filter, isWarranty = false) {
+      const total = items.length;
+      const released = items.filter(isReleased).length;
+      const first = firstRequestDate(items);
+      const days = first ? daysBetween(first, today()) : 0;
+      const avg = averageAttentionDays(items);
+      const cost = items.reduce((sum, item) => sum + Number(item.warrantyCost || projectMeta(item.project).cost || 0), 0);
+      const active = els.reportTypeFilter.value === filter ? ' active' : '';
+      return `
+        <button class="metric${active}" type="button" data-report-type-button="${filter}">
+          <strong>${progressPercent(items)}%</strong>
+          <span>${title}: ${released}/${total} atendidas${isWarranty ? ` | ${days} dias desde primera garantia | ${avg} dias prom. | ${money(cost)}` : ` | ${avg} dias prom.`}</span>
+        </button>
+      `;
+    }
+
+    function reportMarkup(item) {
+      const pending = isReleased(item) ? 'Atendido y liberado' : item.status === 'por-liberar' ? 'Atendido por Obra, falta liberar Calidad' : 'Pendiente de atender';
+      return `
+        <article class="ticket">
+          ${imageMarkup(item.qualityPhoto, 'Foto de calidad')}
+          <div class="ticket-body">
+            <div class="ticket-top">
+              <div class="ticket-title">
+                <strong>${escapeHtml(item.project)} | ${requestType(item) === 'garantia' ? 'Garantia' : 'Obra'}</strong>
+                <span>${escapeHtml(item.id)} | ${pending}</span>
+              </div>
+              <span class="status ${statusClass(item.status)}">${statusLabel(item.status)}</span>
+            </div>
+            <p><strong>Solicito Calidad:</strong> ${escapeHtml(item.description)}</p>
+            <p><strong>Atendio Obra:</strong> ${item.doneDate ? `${formatDate(item.doneDate)}${item.note ? ` | ${escapeHtml(item.note)}` : ''}` : 'Pendiente'}</p>
+            ${requestType(item) === 'garantia' ? `<div class="meta">Costo garantia: ${money(Number(item.warrantyCost || projectMeta(item.project).cost || 0))}</div>` : ''}
+            ${item.donePhoto ? imageMarkup(item.donePhoto, 'Foto de obra') : ''}
+          </div>
+        </article>
+      `;
+    }
+
+    function requestType(item) {
+      return item.projectType || projectMeta(item.project).type || 'obra';
+    }
+
+    function warrantyTotal(project) {
+      return state.requests
+        .filter(item => item.project === project && requestType(item) === 'garantia')
+        .reduce((sum, item) => sum + Number(item.warrantyCost || projectMeta(project).cost || 0), 0);
+    }
+
+    function money(value) {
+      return Number(value || 0).toLocaleString('es-MX', { style: 'currency', currency: 'MXN' });
+    }
+
+    function firstRequestDate(items) {
+      const dates = items.map(item => item.requestDate).filter(Boolean).sort();
+      return dates[0] || '';
+    }
+
+    function daysBetween(start, end) {
+      if (!start || !end) return 0;
+      const startDate = new Date(`${start}T00:00:00`);
+      const endDate = new Date(`${end}T00:00:00`);
+      return Math.max(0, Math.round((endDate - startDate) / 86400000));
+    }
+
+    function averageAttentionDays(items) {
+      const attended = items.filter(item => item.doneDate && item.requestDate);
+      if (!attended.length) return 0;
+      const total = attended.reduce((sum, item) => sum + daysBetween(item.requestDate, item.doneDate), 0);
+      return Math.round(total / attended.length);
+    }
+
+    function renderUsers() {
+      if (!els.userList) return;
+      els.userList.innerHTML = state.users.map(user => `
+        <article class="user-card">
+          <div class="user-card-top">
+            <div>
+              <strong>${escapeHtml(user.name)}</strong>
+              <span>${escapeHtml(user.username || user.email)} | ${escapeHtml(user.email)}</span>
+            </div>
+            <span class="status ${user.role === 'admin' ? 'por-liberar' : user.role === 'calidad' ? 'liberado' : 'en-proceso'}">${roleLabel(user.role)}</span>
+          </div>
+          <div class="meta">Contrasena actual: ${escapeHtml(user.password)}</div>
+          <div class="ticket-actions">
+            <button class="btn mini secondary" data-reset-password="${escapeAttr(user.id)}">Cambiar contrasena</button>
+            ${user.id !== 'USR-ADMIN' ? `<button class="btn mini danger" data-delete-user="${escapeAttr(user.id)}">Eliminar</button>` : ''}
+          </div>
+        </article>
+      `).join('');
+      document.getElementById('userCount').textContent = state.users.length;
+    }
+
+    function searchItems(items, query) {
+      if (!query) return items;
+      return items.filter(item => [item.project, item.description, item.id, item.note].join(' ').toLowerCase().includes(query));
+    }
+
+    function sortNewest(a, b) {
+      return String(b.createdAt).localeCompare(String(a.createdAt));
+    }
+
+    function sortOldest(a, b) {
+      return String(a.requestDate).localeCompare(String(b.requestDate));
+    }
+
+    function emptyMarkup(text) {
+      return `<div class="empty">${escapeHtml(text)}</div>`;
+    }
+
+    function ticketMarkup(item) {
+      const donePhoto = item.donePhoto
+        ? `<div class="ticket-img"><img src="${item.donePhoto}" alt="Foto de terminacion"></div>`
+        : imageMarkup(item.qualityPhoto, 'Foto de calidad');
+      return `
+        <article class="ticket" data-id="${escapeAttr(item.id)}">
+          ${donePhoto}
+          <div class="ticket-body">
+            <div class="ticket-top">
+              <div class="ticket-title">
+                <strong>${escapeHtml(item.project)}</strong>
+                <span>${escapeHtml(item.id)} | Solicitud: ${formatDate(item.requestDate)}</span>
+              </div>
+              <span class="status ${statusClass(item.status)}">${statusLabel(item.status)}</span>
+            </div>
+            <p>${escapeHtml(item.description)}</p>
+            ${timelineMarkup(item)}
+            ${reviewMarkup(item)}
+            ${rejectionMarkup(item)}
+            ${item.note ? `<div class="meta">Comentario: ${escapeHtml(item.note)}</div>` : ''}
+            <div class="ticket-actions">
+              ${item.status === 'por-liberar' ? `<button class="btn mini done" data-release="${escapeAttr(item.id)}">Liberar</button><button class="btn mini danger" data-reject="${escapeAttr(item.id)}">Rechazar</button>` : ''}
+              ${!isReleased(item) && item.status !== 'por-liberar' ? `<button class="btn mini secondary" data-progress="${escapeAttr(item.id)}">Marcar en proceso</button>` : ''}
+              ${isReleased(item) ? `<a class="btn mini secondary" href="${mailLink(item)}">Correo</a>` : ''}
+              <button class="btn mini danger" data-delete="${escapeAttr(item.id)}">Eliminar</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function siteTicketMarkup(item) {
+      return `
+        <article class="ticket" data-id="${escapeAttr(item.id)}">
+          ${imageMarkup(item.qualityPhoto, 'Foto de calidad')}
+          <div class="ticket-body">
+            <div class="ticket-top">
+              <div class="ticket-title">
+                <strong>${escapeHtml(item.project)}</strong>
+                <span>${escapeHtml(item.id)} | Solicitud: ${formatDate(item.requestDate)}</span>
+              </div>
+              <span class="status ${statusClass(item.status)}">${statusLabel(item.status)}</span>
+            </div>
+            <p>${escapeHtml(item.description)}</p>
+            ${timelineMarkup(item)}
+            ${rejectionMarkup(item)}
+            <div class="ticket-actions">
+              ${item.status !== 'en-proceso' ? `<button class="btn mini secondary" data-progress="${escapeAttr(item.id)}">En proceso</button>` : ''}
+              <button class="btn mini done" data-complete="${escapeAttr(item.id)}">${item.status === 'rechazado' ? 'Volver a enviar' : 'Reportar atendido'}</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function imageMarkup(src, alt) {
+      return src ? `<div class="ticket-img"><img src="${src}" alt="${escapeAttr(alt)}"></div>` : '<div class="ticket-img">Sin fotografia</div>';
+    }
+
+    function reviewMarkup(item) {
+      if (item.status !== 'por-liberar') return '';
+      return `
+        <div class="review-box">
+          <strong>Obra reporto atendido</strong>
+          <span>Calidad debe revisar la evidencia y liberar o rechazar.</span>
+        </div>
+      `;
+    }
+
+    function rejectionMarkup(item) {
+      if (item.status !== 'rechazado' || !item.rejectionNote) return '';
+      return `
+        <div class="reject-box">
+          <strong>Rechazado por Calidad</strong>
+          <span>${escapeHtml(item.rejectionNote)}</span>
+        </div>
+      `;
+    }
+
+    function timelineMarkup(item) {
+      const done = item.doneDate ? formatDate(item.doneDate) : 'Pendiente';
+      const release = item.releaseDate ? formatDate(item.releaseDate) : 'Pendiente';
+      return `
+        <div class="timeline">
+          <div class="timeline-line"><span>Solicitado</span><strong>${formatDate(item.requestDate)}</strong></div>
+          <div class="timeline-line"><span>Reportado por Obra</span><strong>${done}</strong></div>
+          <div class="timeline-line"><span>Liberado por Calidad</span><strong>${release}</strong></div>
+        </div>
+      `;
+    }
+
+    function setView(view) {
+      if (state.access === 'obra' && view !== 'obra') view = 'obra';
+      if (state.access === 'calidad' && view === 'obra') view = 'calidad';
+      if (view === 'archivo') view = 'calidad';
+      if (state.access === 'admin' && view !== 'admin') view = 'admin';
+      state.view = view;
+      document.querySelectorAll('.nav-button').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
+      document.getElementById('nuevaView').classList.toggle('hidden', view !== 'nueva');
+      document.getElementById('calidadView').classList.toggle('hidden', view !== 'calidad');
+      document.getElementById('obraView').classList.toggle('hidden', view !== 'obra');
+      document.getElementById('archivoView').classList.toggle('hidden', view !== 'archivo');
+      document.getElementById('reportesView').classList.toggle('hidden', view !== 'reportes');
+      document.getElementById('adminView').classList.toggle('hidden', view !== 'admin');
+      document.getElementById('roleSummary').classList.toggle('hidden', view === 'reportes');
+      document.getElementById('dashboardStats').classList.toggle('hidden', view === 'nueva' || view === 'admin' || view === 'reportes');
+      renderDashboardFilter();
+      updateViewText();
+    }
+
+    function login(event) {
+      event.preventDefault();
+      const accessId = els.loginEmail.value.trim().toLowerCase();
+      const password = els.loginPassword.value;
+      const user = state.users.find(item => [item.email, item.username].filter(Boolean).some(value => value.toLowerCase() === accessId) && item.password === password);
+      if (!user) {
+        els.loginError.textContent = 'Correo o contrasena incorrectos.';
+        return;
+      }
+      els.loginError.textContent = '';
+      saveSession(user);
+      state.selectedProject = '';
+      state.qualitySelectedProject = '';
+      render();
+      setView(state.view);
+    }
+
+    function setAccess(access) {
+      state.access = access;
+      state.view = access === 'obra' ? 'obra' : access === 'admin' ? 'admin' : 'calidad';
+      state.selectedProject = '';
+      state.qualitySelectedProject = '';
+      localStorage.setItem(ACCESS_KEY, access);
+      stopCamera('quality');
+      stopCamera('done');
+      render();
+      setView(state.view);
+    }
+
+    function switchAccess() {
+      saveSession(null);
+      state.access = '';
+      localStorage.removeItem(ACCESS_KEY);
+      els.loginPassword.value = '';
+      stopCamera('quality');
+      stopCamera('done');
+      renderAccessState();
+    }
+
+    function openProject(project) {
+      state.selectedProject = project;
+      els.siteSearch.value = '';
+      renderSiteList();
+    }
+
+    function backToProjects() {
+      state.selectedProject = '';
+      els.siteSearch.value = '';
+      renderSiteList();
+    }
+
+    function openQualityProject(project) {
+      state.qualitySelectedProject = project;
+      els.qualitySearch.value = '';
+      renderQualityList();
+    }
+
+    function backToQualityProjects() {
+      state.qualitySelectedProject = '';
+      els.qualitySearch.value = '';
+      renderQualityList();
+    }
+
+    function setPreview(type, src) {
+      const preview = type === 'quality' ? els.qualityPreview : els.donePreview;
+      state.photos[type] = src || '';
+      preview.innerHTML = src ? `<img src="${src}" alt="Fotografia capturada">` : 'Sin fotografia';
+    }
+
+    async function startCamera(type) {
+      stopCamera(type);
+      const preview = type === 'quality' ? els.qualityPreview : els.donePreview;
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' }, audio: false });
+        state.streams[type] = stream;
+        const video = document.createElement('video');
+        video.autoplay = true;
+        video.playsInline = true;
+        video.srcObject = stream;
+        preview.innerHTML = '';
+        preview.appendChild(video);
+      } catch (error) {
+        preview.textContent = 'No se pudo abrir la camara. Usa Subir foto.';
+      }
+    }
+
+    function stopCamera(type) {
+      const stream = state.streams[type];
+      if (stream) stream.getTracks().forEach(track => track.stop());
+      state.streams[type] = null;
+    }
+
+    async function capturePhoto(type) {
+      const preview = type === 'quality' ? els.qualityPreview : els.donePreview;
+      const video = preview.querySelector('video');
+      if (!video) {
+        await startCamera(type);
+        return;
+      }
+      const canvas = els.canvas;
+      canvas.width = video.videoWidth || 1280;
+      canvas.height = video.videoHeight || 720;
+      canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);
+      const src = canvas.toDataURL('image/jpeg', .82);
+      stopCamera(type);
+      setPreview(type, src);
+    }
+
+    function handleFile(type, file) {
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => setPreview(type, reader.result);
+      reader.readAsDataURL(file);
+    }
+
+    function createRequest(event) {
+      event.preventDefault();
+      const action = event.submitter?.value || 'finish';
+      if (!state.photos.quality) {
+        alert('Agrega una fotografia de calidad antes de crear la solicitud.');
+        return;
+      }
+      const newProject = els.obraNueva.value.trim();
+      const project = newProject || els.obraSelect.value;
+      if (!project) {
+        alert('Selecciona una obra existente o escribe una obra nueva.');
+        return;
+      }
+      const existingProject = projectMeta(project);
+      const type = newProject ? els.projectType.value : existingProject.type;
+      const warrantyCost = type === 'garantia' ? Number(els.warrantyCost.value || existingProject.cost || 0) : 0;
+      const item = {
+        id: makeId(),
+        project,
+        projectType: type,
+        warrantyCost,
+        description: els.description.value.trim(),
+        requestDate: els.requestDate.value,
+        qualityPhoto: state.photos.quality,
+        donePhoto: '',
+        doneDate: '',
+        note: '',
+        releaseDate: '',
+        releaseNote: '',
+        rejectionNote: '',
+        rejectedAt: '',
+        reviewCount: 0,
+        status: 'pendiente',
+        createdAt: new Date().toISOString(),
+        completedAt: ''
+      };
+      if (!item.project || !item.description || !item.requestDate) return;
+      if (!projectExists(item.project)) {
+        state.projects.push({ name: item.project, type, cost: warrantyCost });
+        state.projects = cleanProjectList(state.projects);
+        saveProjects();
+      } else if (type === 'garantia' && warrantyCost) {
+        const meta = projectMeta(item.project);
+        meta.type = 'garantia';
+        meta.cost = warrantyCost;
+        saveProjects();
+      }
+      state.requests.push(item);
+      saveRequests();
+      render();
+      if (action === 'continue') {
+        resetQualityForm({ project: item.project });
+        setView('nueva');
+        return;
+      }
+      resetQualityForm();
+      setView('calidad');
+    }
+
+    function resetQualityForm(options = {}) {
+      els.obraSelect.value = options.project || '';
+      els.obraNueva.value = '';
+      els.projectType.value = 'obra';
+      els.warrantyCost.value = '';
+      syncProjectTypeFields();
+      els.description.value = '';
+      els.requestDate.value = today();
+      setPreview('quality', '');
+      stopCamera('quality');
+    }
+
+    function syncProjectTypeFields() {
+      const selected = els.obraSelect.value;
+      if (!selected) return;
+      const meta = projectMeta(selected);
+      els.projectType.value = meta.type || 'obra';
+      els.warrantyCost.value = meta.type === 'garantia' ? Number(meta.cost || 0) : '';
+    }
+
+    function openCompleteModal(id) {
+      const item = state.requests.find(row => row.id === id);
+      if (!item) return;
+      els.completeId.value = id;
+      els.completeDate.value = today();
+      els.completeNote.value = '';
+      setPreview('done', '');
+      els.completeModal.classList.remove('hidden');
+    }
+
+    function closeCompleteModal() {
+      stopCamera('done');
+      els.completeModal.classList.add('hidden');
+    }
+
+    function completeRequest(event) {
+      event.preventDefault();
+      const item = state.requests.find(row => row.id === els.completeId.value);
+      if (!item) return;
+      if (!state.photos.done) {
+        alert('Agrega una fotografia de terminacion antes de confirmar.');
+        return;
+      }
+      item.doneDate = els.completeDate.value;
+      item.donePhoto = state.photos.done;
+      item.note = els.completeNote.value.trim();
+      item.status = 'por-liberar';
+      item.rejectionNote = '';
+      item.rejectedAt = '';
+      item.reviewCount = Number(item.reviewCount || 0) + 1;
+      item.completedAt = '';
+      saveRequests();
+      closeCompleteModal();
+      render();
+      showCompletionNotice(item);
+    }
+
+    function showCompletionNotice(item) {
+      els.toastTitle.textContent = 'Calidad: actividad por liberar';
+      els.toastMessage.textContent = `${item.project} reporto atendido ${item.id}. Calidad debe liberar o rechazar.`;
+      els.toastMail.href = mailLink(item);
+      els.toastWrap.classList.remove('hidden');
+    }
+
+    function releaseRequest(id) {
+      const item = state.requests.find(row => row.id === id);
+      if (!item || item.status !== 'por-liberar') return;
+      item.status = 'liberado';
+      item.releaseDate = today();
+      item.completedAt = new Date().toISOString();
+      item.releaseNote = 'Liberado por Calidad';
+      saveRequests();
+      render();
+    }
+
+    function rejectRequest(id) {
+      const item = state.requests.find(row => row.id === id);
+      if (!item || item.status !== 'por-liberar') return;
+      const reason = prompt('Motivo del rechazo para que Obra lo atienda nuevamente:');
+      if (reason === null) return;
+      item.status = 'rechazado';
+      item.rejectionNote = reason.trim() || 'Revisar nuevamente y enviar otra evidencia.';
+      item.rejectedAt = new Date().toISOString();
+      item.releaseDate = '';
+      item.completedAt = '';
+      saveRequests();
+      render();
+    }
+
+    function mailLink(item) {
+      const subject = encodeURIComponent(`Trabajo liberado ${item.id} - ${item.project}`);
+      const body = encodeURIComponent([
+        `Obra: ${item.project}`,
+        `Solicitud: ${item.id}`,
+        `Fecha solicitada: ${formatDate(item.requestDate)}`,
+        `Fecha atendida por obra: ${formatDate(item.doneDate)}`,
+        `Fecha liberada por calidad: ${formatDate(item.releaseDate)}`,
+        '',
+        `Actividad: ${item.description}`,
+        item.note ? `Comentario de obra: ${item.note}` : ''
+      ].filter(Boolean).join('\n'));
+      return `mailto:${MAIL_TO}?subject=${subject}&body=${body}`;
+    }
+
+    function markProgress(id) {
+      const item = state.requests.find(row => row.id === id);
+      if (!item || isReleased(item) || item.status === 'por-liberar') return;
+      item.status = 'en-proceso';
+      saveRequests();
+      render();
+    }
+
+    function deleteRequest(id) {
+      if (!confirm('Eliminar esta solicitud?')) return;
+      state.requests = state.requests.filter(item => item.id !== id);
+      saveRequests();
+      render();
+    }
+
+    function exportFile(name, content, type) {
+      const blob = new Blob([content], { type });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = name;
+      link.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportCsv() {
+      const header = ['id','obra','descripcion','fecha_solicitud','estatus','fecha_terminacion','comentario'];
+      const rows = state.requests.map(item => [
+        item.id, item.project, item.description, item.requestDate, statusLabel(item.status), item.doneDate, item.note
+      ]);
+      const csv = [header, ...rows].map(row => row.map(csvCell).join(',')).join('\n');
+      exportFile('seguimiento_calidad_obras.csv', csv, 'text/csv;charset=utf-8');
+    }
+
+    function exportProjectPdf(project, mode = 'quality') {
+      if (!project) return;
+      const items = state.requests
+        .filter(item => item.project === project)
+        .filter(item => mode === 'site' ? ['pendiente', 'en-proceso', 'rechazado'].includes(item.status) : true)
+        .sort(sortOldest);
+      const title = mode === 'site' ? 'Pendientes de Obra' : 'Seguimiento de Calidad';
+      const rows = items.map(item => `
+        <article class="pdf-card">
+          <div>
+            <strong>${escapeHtml(item.id)} | ${statusLabel(item.status)}</strong>
+            <p>${escapeHtml(item.description)}</p>
+            <small>Solicitud: ${formatDate(item.requestDate)} | Obra reporto: ${item.doneDate ? formatDate(item.doneDate) : 'Pendiente'} | Liberacion: ${item.releaseDate ? formatDate(item.releaseDate) : 'Pendiente'}</small>
+            ${item.note ? `<small>Comentario de obra: ${escapeHtml(item.note)}</small>` : ''}
+            ${item.rejectionNote ? `<small>Rechazo: ${escapeHtml(item.rejectionNote)}</small>` : ''}
+          </div>
+          <div class="pdf-photos">
+            ${item.qualityPhoto ? `<figure><img src="${item.qualityPhoto}"><figcaption>Calidad</figcaption></figure>` : ''}
+            ${item.donePhoto ? `<figure><img src="${item.donePhoto}"><figcaption>Obra</figcaption></figure>` : ''}
+          </div>
+        </article>
+      `).join('');
+      const report = window.open('', '_blank');
+      if (!report) {
+        alert('Permite ventanas emergentes para generar el PDF.');
+        return;
+      }
+      report.document.write(`<!doctype html>
+        <html>
+          <head>
+            <title>${escapeHtml(project)} - ${title}</title>
+            <style>
+              body { font-family: Arial, sans-serif; color: #102027; margin: 28px; }
+              h1 { margin: 0 0 4px; font-size: 24px; }
+              .meta { color: #5f6f79; margin-bottom: 18px; }
+              .pdf-card { border: 1px solid #d7e0e5; border-radius: 8px; padding: 12px; margin-bottom: 12px; break-inside: avoid; }
+              p { margin: 8px 0; line-height: 1.35; }
+              small { display: block; color: #5f6f79; margin-top: 4px; }
+              .pdf-photos { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 10px; }
+              figure { margin: 0; border: 1px solid #e2e8f0; border-radius: 8px; overflow: hidden; }
+              img { width: 100%; height: 180px; object-fit: cover; display: block; }
+              figcaption { padding: 6px 8px; font-size: 12px; color: #5f6f79; }
+              @media print { button { display: none; } body { margin: 18px; } }
+            </style>
+          </head>
+          <body>
+            <button onclick="window.print()">Guardar como PDF</button>
+            <h1>${escapeHtml(project)}</h1>
+            <div class="meta">${title} | ${items.length} solicitudes | ${new Date().toLocaleDateString('es-MX')}</div>
+            ${rows || '<p>No hay solicitudes para exportar.</p>'}
+          </body>
+        </html>`);
+      report.document.close();
+    }
+
+    function exportReportsPdf() {
+      const project = els.reportProjectFilter.value || 'todos';
+      const type = els.reportTypeFilter.value || 'todos';
+      let items = state.requests.slice().sort(sortOldest);
+      if (project !== 'todos') items = items.filter(item => item.project === project);
+      if (type !== 'todos') items = items.filter(item => requestType(item) === type);
+      const pending = items.filter(item => !isReleased(item)).length;
+      const released = items.filter(isReleased).length;
+      const overallProgress = progressPercent(items);
+      const warrantyItems = items.filter(item => requestType(item) === 'garantia');
+      const workItems = items.filter(item => requestType(item) !== 'garantia');
+      const warrantyCost = warrantyItems.reduce((sum, item) => sum + Number(item.warrantyCost || projectMeta(item.project).cost || 0), 0);
+      const groupedRows = groupedReportMarkup(items);
+      const reportScope = project === 'todos' ? 'Todas las obras y garantias' : escapeHtml(project);
+      const typeLabel = type === 'todos' ? 'Obras y garantias' : type === 'garantia' ? 'Solo garantias' : 'Solo obras';
+      const report = window.open('', '_blank');
+      if (!report) {
+        alert('Permite ventanas emergentes para generar el PDF.');
+        return;
+      }
+      report.document.write(`<!doctype html><html><head><title>Reporte Calidad vs Obra</title><style>
+        body { font-family: Arial, sans-serif; color: #102027; margin: 28px; }
+        h1 { margin: 0 0 4px; font-size: 24px; }
+        h2 { margin: 0; font-size: 18px; }
+        .meta { color: #5f6f79; margin-bottom: 18px; }
+        .summary { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:16px 0; }
+        .summary div,.project-report,.pdf-card { border:1px solid #d7e0e5; border-radius:8px; padding:12px; break-inside:avoid; }
+        .mini-dash { display:grid; grid-template-columns:repeat(2,1fr); gap:12px; margin:16px 0; }
+        .mini-dash > div { border:1px solid #d7e0e5; border-left:5px solid #0f766e; border-radius:8px; padding:12px; }
+        .project-report { margin:18px 0; border-left:5px solid #0f766e; }
+        .project-head { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; margin-bottom:10px; }
+        .project-stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:8px; margin:10px 0; }
+        .project-stats div { background:#f6fafb; border:1px solid #e1e8ed; border-radius:8px; padding:8px; }
+        .progress { height:10px; background:#e7eef1; border-radius:999px; overflow:hidden; margin-top:8px; }
+        .progress span { display:block; height:100%; background:#0f766e; }
+        p { margin:8px 0; line-height:1.35; } small { display:block; color:#5f6f79; margin-top:4px; }
+        .pdf-card { margin-top:10px; }
+        .pdf-photos { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; margin-top:10px; }
+        figure { margin:0; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; }
+        img { width:100%; height:180px; object-fit:cover; display:block; } figcaption { padding:6px 8px; font-size:12px; color:#5f6f79; }
+        @media print { button { display:none; } body { margin:18px; } .project-report { break-inside: avoid; } }
+      </style></head><body>
+        <button onclick="window.print()">Guardar como PDF</button>
+        <h1>Reporte Calidad vs Obra</h1>
+        <div class="meta">${reportScope} | ${typeLabel} | ${new Date().toLocaleDateString('es-MX')}</div>
+        <div class="summary">
+          <div><b>Total</b><br>${items.length}</div>
+          <div><b>Atendidas/liberadas</b><br>${released}</div>
+          <div><b>Pendientes</b><br>${pending}</div>
+          <div><b>Avance general</b><br>${overallProgress}%</div>
+        </div>
+        <div class="mini-dash">
+          <div>
+            <h2>Resumen ejecutivo Obras</h2>
+            <p><b>Total:</b> ${workItems.length}</p>
+            <p><b>Atendidas/liberadas:</b> ${workItems.filter(isReleased).length}</p>
+            <p><b>Pendientes:</b> ${workItems.filter(item => !isReleased(item)).length}</p>
+            <p><b>Avance:</b> ${progressPercent(workItems)}%</p>
+            <p><b>Tiempo promedio atencion:</b> ${averageAttentionDays(workItems)} dias</p>
+          </div>
+          <div>
+            <h2>Resumen ejecutivo Garantias</h2>
+            <p><b>Total:</b> ${warrantyItems.length}</p>
+            <p><b>Atendidas/liberadas:</b> ${warrantyItems.filter(isReleased).length}</p>
+            <p><b>Pendientes:</b> ${warrantyItems.filter(item => !isReleased(item)).length}</p>
+            <p><b>Avance:</b> ${progressPercent(warrantyItems)}%</p>
+            <p><b>Dias desde primera garantia:</b> ${firstRequestDate(warrantyItems) ? daysBetween(firstRequestDate(warrantyItems), today()) : 0}</p>
+            <p><b>Tiempo promedio atencion:</b> ${averageAttentionDays(warrantyItems)} dias</p>
+            <p><b>Costo garantias:</b> ${money(warrantyCost)}</p>
+          </div>
+        </div>
+        ${groupedRows || '<p>No hay informacion para exportar.</p>'}
+      </body></html>`);
+      report.document.close();
+    }
+
+    function groupedReportMarkup(items) {
+      const groups = new Map();
+      items.forEach(item => {
+        if (!groups.has(item.project)) groups.set(item.project, []);
+        groups.get(item.project).push(item);
+      });
+      return [...groups.entries()].map(([project, rows]) => {
+        const released = rows.filter(isReleased).length;
+        const pending = rows.length - released;
+        const percent = progressPercent(rows);
+        const cost = rows.filter(item => requestType(item) === 'garantia').reduce((sum, item) => sum + Number(item.warrantyCost || projectMeta(item.project).cost || 0), 0);
+        const meta = projectMeta(project);
+        const isWarranty = meta.type === 'garantia' || rows.some(item => requestType(item) === 'garantia');
+        return `
+          <section class="project-report">
+            <div class="project-head">
+              <div>
+                <h2>${escapeHtml(project)}</h2>
+                <small>${meta.type === 'garantia' ? 'Garantia' : 'Obra'}</small>
+              </div>
+              <strong>${percent}% de avance</strong>
+            </div>
+            <div class="project-stats">
+              <div><b>Total</b><br>${rows.length}</div>
+              <div><b>Atendidas</b><br>${released}</div>
+              <div><b>Pendientes</b><br>${pending}</div>
+              ${isWarranty ? `<div><b>Costo garantia</b><br>${money(cost)}</div>` : ''}
+            </div>
+            <div class="progress"><span style="width:${percent}%"></span></div>
+            ${rows.map(reportPdfCard).join('')}
+          </section>
+        `;
+      }).join('');
+    }
+
+    function reportPdfCard(item) {
+      return `
+        <article class="pdf-card">
+          <strong>${escapeHtml(item.id)} | ${statusLabel(item.status)}</strong>
+          <p><b>Solicito Calidad:</b> ${escapeHtml(item.description)}</p>
+          <p><b>Atendio Obra:</b> ${item.doneDate ? `${formatDate(item.doneDate)}${item.note ? ` | ${escapeHtml(item.note)}` : ''}` : 'Pendiente'}</p>
+          <small>Solicitud: ${formatDate(item.requestDate)} | Atencion: ${item.doneDate ? formatDate(item.doneDate) : 'Pendiente'} | Liberacion: ${item.releaseDate ? formatDate(item.releaseDate) : 'Pendiente'}</small>
+          ${requestType(item) === 'garantia' ? `<small>Costo garantia: ${money(Number(item.warrantyCost || projectMeta(item.project).cost || 0))}</small>` : ''}
+          <div class="pdf-photos">
+            ${item.qualityPhoto ? `<figure><img src="${item.qualityPhoto}"><figcaption>Solicito Calidad</figcaption></figure>` : ''}
+            ${item.donePhoto ? `<figure><img src="${item.donePhoto}"><figcaption>Atendio Obra</figcaption></figure>` : ''}
+          </div>
+        </article>
+      `;
+    }
+
+    function progressPercent(items) {
+      if (!items.length) return 0;
+      return Math.round((items.filter(isReleased).length / items.length) * 100);
+    }
+
+    function csvCell(value) {
+      return `"${String(value || '').replaceAll('"', '""')}"`;
+    }
+
+    function openProjects() {
+      els.projectsText.value = state.projects.map(project => `${project.name} | ${project.type} | ${project.cost || 0}`).join('\n');
+      els.projectsModal.classList.remove('hidden');
+    }
+
+    function closeProjects() {
+      els.projectsModal.classList.add('hidden');
+    }
+
+    function saveProjectList(event) {
+      event.preventDefault();
+      const projects = els.projectsText.value.split('\n').map(item => {
+        const [name, type, cost] = item.split('|').map(part => part.trim());
+        return { name, type: type === 'garantia' ? 'garantia' : 'obra', cost: Number(cost || 0) };
+      }).filter(item => item.name);
+      state.projects = cleanProjectList(projects);
+      saveProjects();
+      closeProjects();
+      render();
+    }
+
+    function saveUser(event) {
+      event.preventDefault();
+      const email = els.userEmail.value.trim().toLowerCase();
+      const username = els.userUsername.value.trim().toLowerCase();
+      if (state.users.some(user => user.email.toLowerCase() === email)) {
+        alert('Ya existe un usuario con ese correo.');
+        return;
+      }
+      if (state.users.some(user => (user.username || '').toLowerCase() === username)) {
+        alert('Ya existe un usuario con ese nombre de usuario.');
+        return;
+      }
+      state.users.push({
+        id: 'USR-' + Date.now().toString(36).toUpperCase(),
+        name: els.userName.value.trim(),
+        username,
+        email,
+        role: els.userRole.value,
+        password: els.userPassword.value.trim()
+      });
+      saveUsers();
+      els.userForm.reset();
+      renderUsers();
+      renderAccessState();
+    }
+
+    function resetUserPassword(id) {
+      const user = state.users.find(item => item.id === id);
+      if (!user) return;
+      const password = prompt(`Nueva contrasena para ${user.email}`, user.password);
+      if (!password) return;
+      user.password = password.trim();
+      saveUsers();
+      renderUsers();
+    }
+
+    function deleteUser(id) {
+      const user = state.users.find(item => item.id === id);
+      if (!user || !confirm(`Eliminar usuario ${user.email}?`)) return;
+      state.users = state.users.filter(item => item.id !== id);
+      saveUsers();
+      renderUsers();
+      renderAccessState();
+    }
+
+    function escapeHtml(value) {
+      return String(value || '').replace(/[&<>"']/g, char => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;'
+      }[char]));
+    }
+
+    function escapeAttr(value) {
+      return escapeHtml(value);
+    }
+
+    document.querySelectorAll('.nav-button').forEach(btn => {
+      btn.addEventListener('click', () => setView(btn.dataset.view));
+    });
+
+    document.querySelectorAll('[data-dashboard-filter]').forEach(btn => {
+      btn.addEventListener('click', () => setDashboardFilter(btn.dataset.dashboardFilter));
+    });
+
+    document.body.addEventListener('click', event => {
+      const capture = event.target.closest('[data-capture]');
+      const upload = event.target.closest('[data-upload]');
+      const clear = event.target.closest('[data-clear-photo]');
+      const complete = event.target.closest('[data-complete]');
+      const progress = event.target.closest('[data-progress]');
+      const release = event.target.closest('[data-release]');
+      const reject = event.target.closest('[data-reject]');
+      const remove = event.target.closest('[data-delete]');
+      const openProjectButton = event.target.closest('[data-open-project]');
+      const openQualityProjectButton = event.target.closest('[data-open-quality-project]');
+      const qualityFilter = event.target.closest('[data-quality-filter]');
+      const resetPassword = event.target.closest('[data-reset-password]');
+      const deleteUserButton = event.target.closest('[data-delete-user]');
+      const reportTypeButton = event.target.closest('[data-report-type-button]');
+      if (qualityFilter) {
+        els.qualityStatus.value = qualityFilter.dataset.qualityFilter;
+        renderQualityList();
+      }
+      if (reportTypeButton) {
+        const nextType = reportTypeButton.dataset.reportTypeButton;
+        els.reportTypeFilter.value = els.reportTypeFilter.value === nextType ? 'todos' : nextType;
+        renderReports();
+      }
+      if (openProjectButton) openProject(openProjectButton.dataset.openProject);
+      if (openQualityProjectButton) openQualityProject(openQualityProjectButton.dataset.openQualityProject);
+      if (capture) capturePhoto(capture.dataset.capture);
+      if (upload) (upload.dataset.upload === 'quality' ? els.qualityFile : els.doneFile).click();
+      if (clear) {
+        stopCamera(clear.dataset.clearPhoto);
+        setPreview(clear.dataset.clearPhoto, '');
+      }
+      if (complete) openCompleteModal(complete.dataset.complete);
+      if (progress) markProgress(progress.dataset.progress);
+      if (release) releaseRequest(release.dataset.release);
+      if (reject) rejectRequest(reject.dataset.reject);
+      if (remove) deleteRequest(remove.dataset.delete);
+      if (resetPassword) resetUserPassword(resetPassword.dataset.resetPassword);
+      if (deleteUserButton) deleteUser(deleteUserButton.dataset.deleteUser);
+    });
+
+    els.loginForm.addEventListener('submit', login);
+    els.qualityFile.addEventListener('change', event => handleFile('quality', event.target.files[0]));
+    els.doneFile.addEventListener('change', event => handleFile('done', event.target.files[0]));
+    els.obraSelect.addEventListener('change', syncProjectTypeFields);
+    els.requestForm.addEventListener('submit', createRequest);
+    els.requestForm.addEventListener('reset', event => {
+      event.preventDefault();
+      resetQualityForm();
+    });
+    els.completeForm.addEventListener('submit', completeRequest);
+    document.getElementById('closeCompleteModal').addEventListener('click', closeCompleteModal);
+    document.getElementById('cancelComplete').addEventListener('click', closeCompleteModal);
+    document.getElementById('toastClose').addEventListener('click', () => els.toastWrap.classList.add('hidden'));
+    document.getElementById('newRequestBtn').addEventListener('click', () => setView('nueva'));
+    document.getElementById('backToQualityFromNew').addEventListener('click', () => setView('calidad'));
+    document.getElementById('clearDashboardFilterBtn').addEventListener('click', () => {
+      state.dashboardFilter = '';
+      render();
+    });
+    document.getElementById('manageProjectsBtn').addEventListener('click', openProjects);
+    document.getElementById('switchAccessBtn').addEventListener('click', switchAccess);
+    document.getElementById('headerSwitchAccessBtn').addEventListener('click', switchAccess);
+    document.getElementById('backToProjectsBtn').addEventListener('click', backToProjects);
+    document.getElementById('backToQualityProjectsBtn').addEventListener('click', backToQualityProjects);
+    document.getElementById('exportQualityProjectPdfBtn').addEventListener('click', () => exportProjectPdf(state.qualitySelectedProject, 'quality'));
+    document.getElementById('exportSiteProjectPdfBtn').addEventListener('click', () => exportProjectPdf(state.selectedProject, 'site'));
+    document.getElementById('exportReportsPdfBtn').addEventListener('click', exportReportsPdf);
+    document.getElementById('closeProjectsModal').addEventListener('click', closeProjects);
+    document.getElementById('cancelProjects').addEventListener('click', closeProjects);
+    document.getElementById('projectsForm').addEventListener('submit', saveProjectList);
+    els.userForm.addEventListener('submit', saveUser);
+    document.getElementById('exportJsonBtn').addEventListener('click', () => exportFile('seguimiento_calidad_obras.json', JSON.stringify(state.requests, null, 2), 'application/json'));
+    document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
+    document.getElementById('clearBtn').addEventListener('click', () => {
+      if (!confirm('Borrar todas las solicitudes guardadas en este navegador?')) return;
+      state.requests = [];
+      saveRequests();
+      render();
+    });
+
+    els.qualitySearch.addEventListener('input', renderQualityList);
+    els.qualityStatus.addEventListener('input', renderQualityList);
+    els.siteSearch.addEventListener('input', renderSiteList);
+    [els.archiveSearch, els.archiveProjectFilter].forEach(el => el.addEventListener('input', renderArchiveList));
+    [els.reportProjectFilter, els.reportTypeFilter].forEach(el => el.addEventListener('input', renderReports));
+
+    els.requestDate.value = today();
+    render();
+    if (state.access) setView(state.view);
+
+    if (state.requests.filter(isReleased).length > state.lastKnownCompleted) {
+      const latest = state.requests.filter(isReleased).sort(sortNewest)[0];
+      if (latest) showCompletionNotice(latest);
+    }
+  </script>
+</body>
+</html>
