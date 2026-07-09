@@ -1905,6 +1905,7 @@
 
   <canvas id="canvas" class="hidden"></canvas>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script>
     const STORAGE_KEY = 'tdc_calidad_obras_v1';
     const PROJECTS_KEY = 'tdc_calidad_obras_projects_v1';
@@ -1912,6 +1913,10 @@
     const SESSION_KEY = 'tdc_calidad_obras_session_v1';
     const USERS_KEY = 'tdc_calidad_obras_users_v1';
     const MAIL_TO = 'calidad@tdcasas.com';
+    const SUPABASE_URL = 'https://nmcutdaooexavqlnuose.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5tY3V0ZGFvb2V4YXZxbG51b3NlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1NDU2MzksImV4cCI6MjA5OTEyMTYzOX0.DySPfnH-3feJ2B01agR7SjiZphWDOiQZuru69uVnapI';
+    const PHOTO_BUCKET = 'evidencias';
+    const supabaseClient = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY) : null;
     const DEMO_PROJECTS = [
       'Casa Muestra',
       'Obra Norte',
@@ -2041,7 +2046,7 @@
     }
 
     function saveSession(user) {
-      const session = user ? { id: user.id, name: user.name, username: user.username || user.email, email: user.email, role: user.role } : null;
+      const session = user ? { id: user.id, name: user.name, username: user.username || user.email, email: user.email, role: user.role, cloud: Boolean(user.cloud) } : null;
       if (session) localStorage.setItem(SESSION_KEY, JSON.stringify(session));
       else localStorage.removeItem(SESSION_KEY);
       state.currentUser = session;
@@ -2051,9 +2056,149 @@
     function applySession() {
       state.access = state.currentUser?.role || '';
       if (state.access === 'obra') state.view = 'obra';
-      else if (state.access === 'admin') state.view = 'admin';
       else state.view = 'calidad';
       localStorage.setItem(ACCESS_KEY, state.access || '');
+    }
+
+    function cloudAvailable() {
+      return Boolean(supabaseClient && state.currentUser?.cloud);
+    }
+
+    async function loadCloudData() {
+      if (!cloudAvailable()) return;
+      const [{ data: profiles, error: profileError }, { data: projects, error: projectError }, { data: requests, error: requestError }] = await Promise.all([
+        supabaseClient.from('profiles').select('*').order('name'),
+        supabaseClient.from('projects').select('*').order('name'),
+        supabaseClient.from('requests').select('*').order('request_date', { ascending: true })
+      ]);
+      if (profileError || projectError || requestError) {
+        alert('No se pudo cargar informacion de Supabase. Revisa que ya pegaste el SQL y que el usuario tenga perfil.');
+        return;
+      }
+      state.users = (profiles || []).map(row => ({
+        id: row.id,
+        name: row.name,
+        username: row.email,
+        email: row.email,
+        role: row.role,
+        password: '',
+        cloud: true
+      }));
+      state.projects = (projects || []).map(row => ({
+        id: row.id,
+        name: row.name,
+        type: row.type,
+        cost: Number(row.warranty_cost || 0)
+      }));
+      state.requests = await Promise.all((requests || []).map(cloudRequestToItem));
+      saveProjects();
+      saveRequests();
+    }
+
+    async function cloudRequestToItem(row) {
+      const [qualityPhoto, donePhoto] = await Promise.all([
+        signedPhotoUrl(row.quality_photo_path),
+        signedPhotoUrl(row.done_photo_path)
+      ]);
+      return {
+        id: row.id,
+        project: row.project_name,
+        projectId: row.project_id,
+        projectType: row.project_type,
+        warrantyCost: Number(row.warranty_cost || 0),
+        description: row.description,
+        requestDate: row.request_date,
+        qualityPhoto,
+        qualityPhotoPath: row.quality_photo_path || '',
+        donePhoto,
+        donePhotoPath: row.done_photo_path || '',
+        doneDate: row.done_date || '',
+        note: row.note || '',
+        releaseDate: row.release_date || '',
+        releaseNote: row.release_note || '',
+        rejectionNote: row.rejection_note || '',
+        rejectedAt: row.rejected_at || '',
+        reviewCount: Number(row.review_count || 0),
+        status: row.status,
+        createdAt: row.created_at || '',
+        completedAt: row.completed_at || ''
+      };
+    }
+
+    async function signedPhotoUrl(path) {
+      if (!path || !supabaseClient) return '';
+      const { data, error } = await supabaseClient.storage.from(PHOTO_BUCKET).createSignedUrl(path, 60 * 60);
+      return error ? '' : data.signedUrl;
+    }
+
+    function dataUrlToBlob(dataUrl) {
+      const [meta, base64] = String(dataUrl).split(',');
+      const mime = (meta.match(/data:(.*?);/) || [])[1] || 'image/jpeg';
+      const binary = atob(base64 || '');
+      const bytes = new Uint8Array(binary.length);
+      for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+      return new Blob([bytes], { type: mime });
+    }
+
+    async function uploadCloudPhoto(kind, dataUrl, requestId) {
+      if (!cloudAvailable() || !dataUrl || !dataUrl.startsWith('data:')) return { path: '', url: dataUrl || '' };
+      const blob = dataUrlToBlob(dataUrl);
+      const path = `${kind}/${requestId}-${Date.now()}.jpg`;
+      const { error } = await supabaseClient.storage.from(PHOTO_BUCKET).upload(path, blob, {
+        contentType: blob.type || 'image/jpeg',
+        upsert: true
+      });
+      if (error) throw error;
+      return { path, url: await signedPhotoUrl(path) };
+    }
+
+    async function upsertCloudProject(project) {
+      if (!cloudAvailable()) return projectMeta(project.name);
+      const payload = {
+        name: project.name,
+        type: project.type,
+        warranty_cost: Number(project.cost || 0)
+      };
+      const { data, error } = await supabaseClient
+        .from('projects')
+        .upsert(payload, { onConflict: 'name' })
+        .select()
+        .single();
+      if (error) throw error;
+      return { id: data.id, name: data.name, type: data.type, cost: Number(data.warranty_cost || 0) };
+    }
+
+    async function saveCloudRequest(item) {
+      if (!cloudAvailable()) return;
+      const payload = {
+        id: item.id,
+        project_id: item.projectId || null,
+        project_name: item.project,
+        project_type: item.projectType || requestType(item),
+        warranty_cost: Number(item.warrantyCost || 0),
+        description: item.description,
+        status: item.status,
+        request_date: item.requestDate,
+        done_date: item.doneDate || null,
+        release_date: item.releaseDate || null,
+        note: item.note || '',
+        release_note: item.releaseNote || '',
+        rejection_note: item.rejectionNote || '',
+        rejected_at: item.rejectedAt || null,
+        review_count: Number(item.reviewCount || 0),
+        quality_photo_path: item.qualityPhotoPath || null,
+        done_photo_path: item.donePhotoPath || null,
+        created_by: state.currentUser?.id || null,
+        completed_at: item.completedAt || null
+      };
+      const { error } = await supabaseClient.from('requests').upsert(payload, { onConflict: 'id' });
+      if (error) throw error;
+    }
+
+    async function deleteCloudRequest(id) {
+      if (!cloudAvailable()) return;
+      const { error } = await supabaseClient.from('requests').delete().eq('id', id);
+      if (error) throw error;
     }
 
     function loadProjects() {
@@ -2225,7 +2370,7 @@
 
     function setDashboardFilter(filter) {
       state.dashboardFilter = state.dashboardFilter === filter ? '' : filter;
-      if (state.access === 'calidad') setView('calidad');
+      if (state.access === 'calidad' || state.access === 'admin') setView('calidad');
       else if (state.access === 'obra') setView('obra');
       render();
     }
@@ -2251,25 +2396,40 @@
 
       const isQuality = state.access === 'calidad';
       const isAdmin = state.access === 'admin';
+      const canManageQuality = isQuality || isAdmin;
+      const canSeeSite = state.access === 'obra' || isAdmin;
       els.currentAccessLabel.textContent = `${roleLabel(state.access)} | ${state.currentUser?.email || ''}`;
-      els.roleSummaryTitle.textContent = isAdmin ? 'Administracion de usuarios' : isQuality ? 'Acceso general de Calidad' : 'Acceso general de Obra';
+      els.roleSummaryTitle.textContent = isAdmin ? 'Acceso general Admin' : isQuality ? 'Acceso general de Calidad' : 'Acceso general de Obra';
       els.roleSummaryText.textContent = isAdmin
-        ? 'Puedes crear usuarios, asignar roles y restablecer contrasenas.'
+        ? 'Puedes ver Calidad, Obra, reportes y administrar usuarios.'
         : isQuality
           ? 'Puedes levantar solicitudes, revisar todas las obras, exportar informacion y administrar el catalogo.'
           : 'Puedes consultar pendientes de todas las obras, filtrar por obra y confirmar trabajos terminados con foto.';
 
-      document.querySelector('[data-view="nueva"]').classList.toggle('hidden', !isQuality);
-      document.querySelector('[data-view="calidad"]').classList.toggle('hidden', !isQuality);
-      document.querySelector('[data-view="obra"]').classList.toggle('hidden', state.access !== 'obra');
-      document.querySelector('[data-view="reportes"]').classList.toggle('hidden', !isQuality);
+      document.querySelector('[data-view="nueva"]').classList.toggle('hidden', !canManageQuality);
+      document.querySelector('[data-view="calidad"]').classList.toggle('hidden', !canManageQuality);
+      document.querySelector('[data-view="obra"]').classList.toggle('hidden', !canSeeSite);
+      document.querySelector('[data-view="reportes"]').classList.toggle('hidden', !canManageQuality);
       document.querySelector('[data-view="admin"]').classList.toggle('hidden', !isAdmin);
-      document.getElementById('newRequestBtn').classList.toggle('hidden', !isQuality);
-      document.getElementById('manageProjectsBtn').classList.toggle('hidden', !isQuality);
-      document.getElementById('clearBtn').classList.toggle('hidden', !isQuality);
-      document.getElementById('exportJsonBtn').classList.toggle('hidden', !isQuality);
-      document.getElementById('exportCsvBtn').classList.toggle('hidden', !isQuality);
+      document.getElementById('newRequestBtn').classList.toggle('hidden', !canManageQuality);
+      document.getElementById('manageProjectsBtn').classList.toggle('hidden', !canManageQuality);
+      document.getElementById('clearBtn').classList.toggle('hidden', !canManageQuality);
+      document.getElementById('exportJsonBtn').classList.toggle('hidden', !canManageQuality);
+      document.getElementById('exportCsvBtn').classList.toggle('hidden', !canManageQuality);
       document.getElementById('userCount').textContent = state.users.length;
+      renderCloudAdminMode();
+    }
+
+    function renderCloudAdminMode() {
+      if (!els.userForm) return;
+      const isCloud = cloudAvailable();
+      els.userForm.querySelector('h3').textContent = isCloud ? 'Usuarios en Supabase' : 'Crear usuario';
+      els.userForm.querySelector('.panel-subtitle').textContent = isCloud
+        ? 'Crea el acceso en Supabase Authentication y ajusta el rol en la tabla profiles.'
+        : 'Cada acceso queda ligado a un correo, rol y contrasena.';
+      els.userForm.querySelectorAll('input, select, button').forEach(control => {
+        control.disabled = isCloud;
+      });
     }
 
     function renderQualityList() {
@@ -2492,6 +2652,26 @@
 
     function renderUsers() {
       if (!els.userList) return;
+      if (cloudAvailable()) {
+        els.userList.innerHTML = `
+          <div class="empty">
+            Los accesos se crean en Supabase > Authentication > Users. Esta lista muestra los perfiles conectados a la app.
+          </div>
+        ` + state.users.map(user => `
+          <article class="user-card">
+            <div class="user-card-top">
+              <div>
+                <strong>${escapeHtml(user.name)}</strong>
+                <span>${escapeHtml(user.email)}</span>
+              </div>
+              <span class="status ${user.role === 'admin' ? 'por-liberar' : user.role === 'calidad' ? 'liberado' : 'en-proceso'}">${roleLabel(user.role)}</span>
+            </div>
+            <div class="meta">Contrasena administrada en Supabase Authentication.</div>
+          </article>
+        `).join('');
+        document.getElementById('userCount').textContent = state.users.length;
+        return;
+      }
       els.userList.innerHTML = state.users.map(user => `
         <article class="user-card">
           <div class="user-card-top">
@@ -2623,7 +2803,6 @@
       if (state.access === 'obra' && view !== 'obra') view = 'obra';
       if (state.access === 'calidad' && view === 'obra') view = 'calidad';
       if (view === 'archivo') view = 'calidad';
-      if (state.access === 'admin' && view !== 'admin') view = 'admin';
       state.view = view;
       document.querySelectorAll('.nav-button').forEach(btn => btn.classList.toggle('active', btn.dataset.view === view));
       document.getElementById('nuevaView').classList.toggle('hidden', view !== 'nueva');
@@ -2638,10 +2817,43 @@
       updateViewText();
     }
 
-    function login(event) {
+    async function login(event) {
       event.preventDefault();
       const accessId = els.loginEmail.value.trim().toLowerCase();
       const password = els.loginPassword.value;
+      if (supabaseClient) {
+        els.loginError.textContent = 'Entrando...';
+        const { data: authData, error: authError } = await supabaseClient.auth.signInWithPassword({
+          email: accessId,
+          password
+        });
+        if (!authError && authData.user) {
+          const { data: profile, error: profileError } = await supabaseClient
+            .from('profiles')
+            .select('*')
+            .eq('id', authData.user.id)
+            .single();
+          if (profileError || !profile) {
+            els.loginError.textContent = 'El usuario existe en Auth, pero falta su perfil/rol en Supabase.';
+            return;
+          }
+          els.loginError.textContent = '';
+          saveSession({
+            id: authData.user.id,
+            name: profile.name,
+            username: profile.email,
+            email: profile.email,
+            role: profile.role,
+            cloud: true
+          });
+          state.selectedProject = '';
+          state.qualitySelectedProject = '';
+          await loadCloudData();
+          render();
+          setView(state.view);
+          return;
+        }
+      }
       const user = state.users.find(item => [item.email, item.username].filter(Boolean).some(value => value.toLowerCase() === accessId) && item.password === password);
       if (!user) {
         els.loginError.textContent = 'Correo o contrasena incorrectos.';
@@ -2657,7 +2869,7 @@
 
     function setAccess(access) {
       state.access = access;
-      state.view = access === 'obra' ? 'obra' : access === 'admin' ? 'admin' : 'calidad';
+      state.view = access === 'obra' ? 'obra' : 'calidad';
       state.selectedProject = '';
       state.qualitySelectedProject = '';
       localStorage.setItem(ACCESS_KEY, access);
@@ -2668,6 +2880,7 @@
     }
 
     function switchAccess() {
+      if (supabaseClient) supabaseClient.auth.signOut();
       saveSession(null);
       state.access = '';
       localStorage.removeItem(ACCESS_KEY);
@@ -2753,7 +2966,7 @@
       reader.readAsDataURL(file);
     }
 
-    function createRequest(event) {
+    async function createRequest(event) {
       event.preventDefault();
       const action = event.submitter?.value || 'finish';
       if (!state.photos.quality) {
@@ -2769,15 +2982,25 @@
       const existingProject = projectMeta(project);
       const type = newProject ? els.projectType.value : existingProject.type;
       const warrantyCost = type === 'garantia' ? Number(els.warrantyCost.value || existingProject.cost || 0) : 0;
+      const requestId = makeId();
+      let qualityUpload = { path: '', url: state.photos.quality };
+      try {
+        qualityUpload = await uploadCloudPhoto('calidad', state.photos.quality, requestId);
+      } catch (error) {
+        alert('No se pudo subir la foto a Supabase. Revisa el bucket privado evidencias.');
+        return;
+      }
       const item = {
-        id: makeId(),
+        id: requestId,
         project,
         projectType: type,
         warrantyCost,
         description: els.description.value.trim(),
         requestDate: els.requestDate.value,
-        qualityPhoto: state.photos.quality,
+        qualityPhoto: qualityUpload.url,
+        qualityPhotoPath: qualityUpload.path,
         donePhoto: '',
+        donePhotoPath: '',
         doneDate: '',
         note: '',
         releaseDate: '',
@@ -2791,14 +3014,40 @@
       };
       if (!item.project || !item.description || !item.requestDate) return;
       if (!projectExists(item.project)) {
-        state.projects.push({ name: item.project, type, cost: warrantyCost });
+        try {
+          const cloudProject = await upsertCloudProject({ name: item.project, type, cost: warrantyCost });
+          item.projectId = cloudProject.id;
+          state.projects.push(cloudProject);
+        } catch (error) {
+          if (cloudAvailable()) {
+            alert('No se pudo guardar la obra en Supabase.');
+            return;
+          }
+          state.projects.push({ name: item.project, type, cost: warrantyCost });
+        }
         state.projects = cleanProjectList(state.projects);
         saveProjects();
       } else if (type === 'garantia' && warrantyCost) {
         const meta = projectMeta(item.project);
         meta.type = 'garantia';
         meta.cost = warrantyCost;
+        item.projectId = meta.id || item.projectId || null;
+        if (cloudAvailable()) {
+          try { await upsertCloudProject({ name: item.project, type: meta.type, cost: meta.cost }); }
+          catch {
+            alert('No se pudo actualizar la garantia en Supabase.');
+            return;
+          }
+        }
         saveProjects();
+      } else {
+        item.projectId = existingProject.id || null;
+      }
+      try {
+        await saveCloudRequest(item);
+      } catch (error) {
+        alert('No se pudo guardar la solicitud en Supabase.');
+        return;
       }
       state.requests.push(item);
       saveRequests();
@@ -2847,7 +3096,7 @@
       els.completeModal.classList.add('hidden');
     }
 
-    function completeRequest(event) {
+    async function completeRequest(event) {
       event.preventDefault();
       const item = state.requests.find(row => row.id === els.completeId.value);
       if (!item) return;
@@ -2855,14 +3104,28 @@
         alert('Agrega una fotografia de terminacion antes de confirmar.');
         return;
       }
+      let doneUpload = { path: '', url: state.photos.done };
+      try {
+        doneUpload = await uploadCloudPhoto('obra', state.photos.done, item.id);
+      } catch (error) {
+        alert('No se pudo subir la foto de Obra a Supabase.');
+        return;
+      }
       item.doneDate = els.completeDate.value;
-      item.donePhoto = state.photos.done;
+      item.donePhoto = doneUpload.url;
+      item.donePhotoPath = doneUpload.path;
       item.note = els.completeNote.value.trim();
       item.status = 'por-liberar';
       item.rejectionNote = '';
       item.rejectedAt = '';
       item.reviewCount = Number(item.reviewCount || 0) + 1;
       item.completedAt = '';
+      try {
+        await saveCloudRequest(item);
+      } catch (error) {
+        alert('No se pudo actualizar la solicitud en Supabase.');
+        return;
+      }
       saveRequests();
       closeCompleteModal();
       render();
@@ -2876,18 +3139,23 @@
       els.toastWrap.classList.remove('hidden');
     }
 
-    function releaseRequest(id) {
+    async function releaseRequest(id) {
       const item = state.requests.find(row => row.id === id);
       if (!item || item.status !== 'por-liberar') return;
       item.status = 'liberado';
       item.releaseDate = today();
       item.completedAt = new Date().toISOString();
       item.releaseNote = 'Liberado por Calidad';
+      try { await saveCloudRequest(item); }
+      catch {
+        alert('No se pudo liberar en Supabase.');
+        return;
+      }
       saveRequests();
       render();
     }
 
-    function rejectRequest(id) {
+    async function rejectRequest(id) {
       const item = state.requests.find(row => row.id === id);
       if (!item || item.status !== 'por-liberar') return;
       const reason = prompt('Motivo del rechazo para que Obra lo atienda nuevamente:');
@@ -2897,6 +3165,11 @@
       item.rejectedAt = new Date().toISOString();
       item.releaseDate = '';
       item.completedAt = '';
+      try { await saveCloudRequest(item); }
+      catch {
+        alert('No se pudo rechazar en Supabase.');
+        return;
+      }
       saveRequests();
       render();
     }
@@ -2916,16 +3189,26 @@
       return `mailto:${MAIL_TO}?subject=${subject}&body=${body}`;
     }
 
-    function markProgress(id) {
+    async function markProgress(id) {
       const item = state.requests.find(row => row.id === id);
       if (!item || isReleased(item) || item.status === 'por-liberar') return;
       item.status = 'en-proceso';
+      try { await saveCloudRequest(item); }
+      catch {
+        alert('No se pudo actualizar el estatus en Supabase.');
+        return;
+      }
       saveRequests();
       render();
     }
 
-    function deleteRequest(id) {
+    async function deleteRequest(id) {
       if (!confirm('Eliminar esta solicitud?')) return;
+      try { await deleteCloudRequest(id); }
+      catch {
+        alert('No se pudo eliminar en Supabase.');
+        return;
+      }
       state.requests = state.requests.filter(item => item.id !== id);
       saveRequests();
       render();
@@ -3150,13 +3433,26 @@
       els.projectsModal.classList.add('hidden');
     }
 
-    function saveProjectList(event) {
+    async function saveProjectList(event) {
       event.preventDefault();
       const projects = els.projectsText.value.split('\n').map(item => {
         const [name, type, cost] = item.split('|').map(part => part.trim());
         return { name, type: type === 'garantia' ? 'garantia' : 'obra', cost: Number(cost || 0) };
       }).filter(item => item.name);
-      state.projects = cleanProjectList(projects);
+      if (cloudAvailable()) {
+        try {
+          const savedProjects = [];
+          for (const project of projects) {
+            savedProjects.push(await upsertCloudProject(project));
+          }
+          state.projects = cleanProjectList(savedProjects);
+        } catch (error) {
+          alert('No se pudo guardar el catalogo en Supabase.');
+          return;
+        }
+      } else {
+        state.projects = cleanProjectList(projects);
+      }
       saveProjects();
       closeProjects();
       render();
@@ -3164,6 +3460,10 @@
 
     function saveUser(event) {
       event.preventDefault();
+      if (cloudAvailable()) {
+        alert('En modo Supabase, crea el usuario en Supabase > Authentication > Users. Despues revisa su rol en la tabla profiles.');
+        return;
+      }
       const email = els.userEmail.value.trim().toLowerCase();
       const username = els.userUsername.value.trim().toLowerCase();
       if (state.users.some(user => user.email.toLowerCase() === email)) {
@@ -3189,6 +3489,10 @@
     }
 
     function resetUserPassword(id) {
+      if (cloudAvailable()) {
+        alert('En modo Supabase, cambia la contrasena desde Supabase > Authentication > Users.');
+        return;
+      }
       const user = state.users.find(item => item.id === id);
       if (!user) return;
       const password = prompt(`Nueva contrasena para ${user.email}`, user.password);
@@ -3199,12 +3503,40 @@
     }
 
     function deleteUser(id) {
+      if (cloudAvailable()) {
+        alert('En modo Supabase, elimina usuarios desde Supabase > Authentication > Users.');
+        return;
+      }
       const user = state.users.find(item => item.id === id);
       if (!user || !confirm(`Eliminar usuario ${user.email}?`)) return;
       state.users = state.users.filter(item => item.id !== id);
       saveUsers();
       renderUsers();
       renderAccessState();
+    }
+
+    async function initializeSupabaseSession() {
+      if (!supabaseClient) return;
+      const { data } = await supabaseClient.auth.getSession();
+      const user = data.session?.user;
+      if (!user) return;
+      const { data: profile } = await supabaseClient
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+      if (!profile) return;
+      saveSession({
+        id: user.id,
+        name: profile.name,
+        username: profile.email,
+        email: profile.email,
+        role: profile.role,
+        cloud: true
+      });
+      await loadCloudData();
+      render();
+      setView(state.view);
     }
 
     function escapeHtml(value) {
@@ -3301,6 +3633,19 @@
     document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
     document.getElementById('clearBtn').addEventListener('click', () => {
       if (!confirm('Borrar todas las solicitudes guardadas en este navegador?')) return;
+      if (cloudAvailable() && !confirm('Tambien se borraran las solicitudes de Supabase para todos los usuarios. Continuar?')) return;
+      if (cloudAvailable()) {
+        supabaseClient.from('requests').delete().neq('id', '').then(({ error }) => {
+          if (error) {
+            alert('No se pudo limpiar Supabase.');
+            return;
+          }
+          state.requests = [];
+          saveRequests();
+          render();
+        });
+        return;
+      }
       state.requests = [];
       saveRequests();
       render();
@@ -3315,6 +3660,7 @@
     els.requestDate.value = today();
     render();
     if (state.access) setView(state.view);
+    initializeSupabaseSession();
 
     if (state.requests.filter(isReleased).length > state.lastKnownCompleted) {
       const latest = state.requests.filter(isReleased).sort(sortNewest)[0];
