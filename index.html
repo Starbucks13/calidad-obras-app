@@ -1517,6 +1517,20 @@
         <div class="login-error" id="loginError"></div>
         <button class="btn" type="submit">Entrar</button>
       </form>
+      <form class="login-card hidden" id="resetPasswordForm">
+        <h2>Nueva contrasena</h2>
+        <p>Escribe una nueva contrasena para terminar la recuperacion de acceso.</p>
+        <label>
+          Nueva contrasena
+          <input id="newPassword" type="password" autocomplete="new-password" required minlength="6" placeholder="Minimo 6 caracteres">
+        </label>
+        <label>
+          Confirmar contrasena
+          <input id="confirmPassword" type="password" autocomplete="new-password" required minlength="6" placeholder="Repite la contrasena">
+        </label>
+        <div class="login-error" id="resetPasswordError"></div>
+        <button class="btn" type="submit">Guardar contrasena</button>
+      </form>
     </div>
   </section>
 
@@ -1980,6 +1994,10 @@
       loginEmail: document.getElementById('loginEmail'),
       loginPassword: document.getElementById('loginPassword'),
       loginError: document.getElementById('loginError'),
+      resetPasswordForm: document.getElementById('resetPasswordForm'),
+      newPassword: document.getElementById('newPassword'),
+      confirmPassword: document.getElementById('confirmPassword'),
+      resetPasswordError: document.getElementById('resetPasswordError'),
       currentAccessLabel: document.getElementById('currentAccessLabel'),
       roleSummaryTitle: document.getElementById('roleSummaryTitle'),
       roleSummaryText: document.getElementById('roleSummaryText'),
@@ -3610,8 +3628,46 @@
       renderAccessState();
     }
 
+    function showPasswordRecovery() {
+      els.loginForm.classList.add('hidden');
+      els.resetPasswordForm.classList.remove('hidden');
+      els.accessScreen.classList.remove('hidden');
+      els.appShell.classList.add('hidden');
+      els.resetPasswordError.textContent = '';
+    }
+
+    async function saveRecoveredPassword(event) {
+      event.preventDefault();
+      const password = els.newPassword.value.trim();
+      const confirmPassword = els.confirmPassword.value.trim();
+      if (password !== confirmPassword) {
+        els.resetPasswordError.textContent = 'Las contrasenas no coinciden.';
+        return;
+      }
+      if (!supabaseClient) {
+        els.resetPasswordError.textContent = 'No se pudo cargar Supabase.';
+        return;
+      }
+      els.resetPasswordError.textContent = 'Guardando...';
+      const { error } = await supabaseClient.auth.updateUser({ password });
+      if (error) {
+        els.resetPasswordError.textContent = error.message || 'No se pudo cambiar la contrasena.';
+        return;
+      }
+      els.resetPasswordError.textContent = '';
+      els.resetPasswordForm.reset();
+      els.resetPasswordForm.classList.add('hidden');
+      els.loginForm.classList.remove('hidden');
+      alert('Contrasena actualizada. Ya puedes iniciar sesion.');
+      await supabaseClient.auth.signOut();
+      saveSession(null);
+    }
+
     async function initializeSupabaseSession() {
       if (!supabaseClient) return;
+      supabaseClient.auth.onAuthStateChange((event) => {
+        if (event === 'PASSWORD_RECOVERY') showPasswordRecovery();
+      });
       const { data } = await supabaseClient.auth.getSession();
       const user = data.session?.user;
       if (!user) return;
@@ -3694,6 +3750,7 @@
     });
 
     els.loginForm.addEventListener('submit', login);
+    els.resetPasswordForm.addEventListener('submit', saveRecoveredPassword);
     els.qualityFile.addEventListener('change', event => handleFile('quality', event.target.files[0]));
     els.doneFile.addEventListener('change', event => handleFile('done', event.target.files[0]));
     els.obraSelect.addEventListener('change', syncProjectTypeFields);
