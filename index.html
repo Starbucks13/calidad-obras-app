@@ -1586,7 +1586,6 @@
           </div>
           <div class="header-maintenance-actions">
             <button class="btn secondary header-switch" id="headerSwitchAccessBtn">Cambiar acceso</button>
-            <button class="btn danger" id="clearBtn">Limpiar demo</button>
           </div>
         </div>
       </header>
@@ -2520,7 +2519,6 @@
       document.querySelector('[data-view="admin"]').classList.toggle('hidden', !isAdmin);
       document.getElementById('newRequestBtn').classList.toggle('hidden', !canManageQuality);
       document.getElementById('manageProjectsBtn').classList.toggle('hidden', !canManageQuality);
-      document.getElementById('clearBtn').classList.toggle('hidden', !canManageQuality);
       document.getElementById('exportJsonBtn').classList.toggle('hidden', !canManageQuality);
       document.getElementById('exportCsvBtn').classList.toggle('hidden', !canManageQuality);
       document.getElementById('userCount').textContent = state.users.length;
@@ -3784,25 +3782,6 @@
     els.userForm.addEventListener('submit', saveUser);
     document.getElementById('exportJsonBtn').addEventListener('click', () => exportFile('seguimiento_calidad_obras.json', JSON.stringify(state.requests, null, 2), 'application/json'));
     document.getElementById('exportCsvBtn').addEventListener('click', exportCsv);
-    document.getElementById('clearBtn').addEventListener('click', () => {
-      if (!confirm('Borrar todas las solicitudes guardadas en este navegador?')) return;
-      if (cloudAvailable() && !confirm('Tambien se borraran las solicitudes de Supabase para todos los usuarios. Continuar?')) return;
-      if (cloudAvailable()) {
-        supabaseClient.from('requests').delete().neq('id', '').then(({ error }) => {
-          if (error) {
-            alert('No se pudo limpiar Supabase.');
-            return;
-          }
-          state.requests = [];
-          saveRequests();
-          render();
-        });
-        return;
-      }
-      state.requests = [];
-      saveRequests();
-      render();
-    });
 
     els.qualitySearch.addEventListener('input', renderQualityList);
     els.qualityStatus.addEventListener('input', renderQualityList);
