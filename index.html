@@ -1098,6 +1098,7 @@
       grid-template-columns: 156px minmax(0, 1fr);
       overflow: hidden;
       transition: border-color .15s ease, box-shadow .15s ease, transform .15s ease;
+      cursor: pointer;
     }
 
     .ticket:hover {
@@ -1226,6 +1227,104 @@
       display: flex;
       flex-wrap: wrap;
       gap: 8px;
+    }
+
+    .detail-modal {
+      width: min(1100px, 100%);
+      max-height: min(92vh, 920px);
+    }
+
+    .detail-body {
+      grid-template-columns: minmax(280px, .85fr) minmax(320px, 1fr);
+      align-items: start;
+      overflow: auto;
+    }
+
+    .detail-photo-grid {
+      display: grid;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+    }
+
+    .detail-photo {
+      display: grid;
+      gap: 8px;
+    }
+
+    .detail-photo span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .detail-photo-frame {
+      min-height: 280px;
+      max-height: 62vh;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #f4f7f8;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      color: var(--muted);
+    }
+
+    .detail-photo-frame img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+      background: #eef3f4;
+    }
+
+    .detail-report {
+      display: grid;
+      gap: 12px;
+    }
+
+    .detail-summary {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfcfc;
+      padding: 14px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .detail-summary h4 {
+      margin: 0;
+      font-size: 20px;
+    }
+
+    .detail-summary p {
+      margin: 0;
+      line-height: 1.45;
+    }
+
+    .detail-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .detail-meta-card {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: white;
+      padding: 10px;
+      display: grid;
+      gap: 3px;
+    }
+
+    .detail-meta-card span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .detail-meta-card strong {
+      overflow-wrap: anywhere;
     }
 
     .mini {
@@ -1622,6 +1721,23 @@
       .ticket-actions .btn,
       .ticket-actions a {
         flex: 1 1 100%;
+      }
+      .detail-modal {
+        max-height: 94vh;
+      }
+      .detail-body {
+        grid-template-columns: 1fr;
+        padding: 12px;
+      }
+      .detail-photo-grid {
+        position: static;
+      }
+      .detail-photo-frame {
+        min-height: 220px;
+        max-height: 48vh;
+      }
+      .detail-meta-grid {
+        grid-template-columns: 1fr;
       }
       .panel {
         padding: 14px;
@@ -2067,6 +2183,17 @@
     </div>
   </div>
 
+  <div id="detailModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
+    <section class="modal detail-modal">
+      <div class="modal-head">
+        <h3 id="detailTitle">Detalle de solicitud</h3>
+        <button type="button" class="btn icon secondary" id="closeDetailModal" aria-label="Cerrar">x</button>
+      </div>
+      <div class="modal-body detail-body" id="detailBody"></div>
+      <div class="modal-actions" id="detailActions"></div>
+    </section>
+  </div>
+
   <div id="projectsModal" class="modal-backdrop hidden" role="dialog" aria-modal="true">
     <form class="modal" id="projectsForm">
       <div class="modal-head">
@@ -2122,6 +2249,7 @@
       qualitySelectedProject: '',
       selectedProject: '',
       dashboardFilter: '',
+      detailId: '',
       requests: loadRequests(),
       projects: loadProjects(),
       photos: { quality: '', done: '' },
@@ -2184,6 +2312,10 @@
       completeId: document.getElementById('completeId'),
       completeDate: document.getElementById('completeDate'),
       completeNote: document.getElementById('completeNote'),
+      detailModal: document.getElementById('detailModal'),
+      detailTitle: document.getElementById('detailTitle'),
+      detailBody: document.getElementById('detailBody'),
+      detailActions: document.getElementById('detailActions'),
       toastWrap: document.getElementById('toastWrap'),
       toastTitle: document.getElementById('toastTitle'),
       toastMessage: document.getElementById('toastMessage'),
@@ -2845,7 +2977,7 @@
     function reportMarkup(item) {
       const pending = isReleased(item) ? 'Atendido y liberado' : item.status === 'por-liberar' ? 'Atendido por Obra, falta liberar Calidad' : 'Pendiente de atender';
       return `
-        <article class="ticket">
+        <article class="ticket" data-open-detail="${escapeAttr(item.id)}" tabindex="0" role="button" aria-label="Ver reporte de ${escapeAttr(item.project)}">
           ${imageMarkup(item.qualityPhoto, 'Foto de calidad')}
           <div class="ticket-body">
             <div class="ticket-top">
@@ -2859,6 +2991,10 @@
             <p><strong>Atendio Obra:</strong> ${item.doneDate ? `${formatDate(item.doneDate)}${item.note ? ` | ${escapeHtml(item.note)}` : ''}` : 'Pendiente'}</p>
             ${requestType(item) === 'garantia' ? `<div class="meta">Costo garantia: ${money(Number(item.warrantyCost || projectMeta(item.project).cost || 0))}</div>` : ''}
             ${item.donePhoto ? imageMarkup(item.donePhoto, 'Foto de obra') : ''}
+            <div class="ticket-actions">
+              <button class="btn mini secondary" data-open-detail="${escapeAttr(item.id)}">Ver reporte</button>
+              ${detailActionsMarkup(item)}
+            </div>
           </div>
         </article>
       `;
@@ -2961,7 +3097,7 @@
         : imageMarkup(item.qualityPhoto, 'Foto de calidad');
       const actions = ticketActionsMarkup(item);
       return `
-        <article class="ticket" data-id="${escapeAttr(item.id)}">
+        <article class="ticket" data-id="${escapeAttr(item.id)}" data-open-detail="${escapeAttr(item.id)}" tabindex="0" role="button" aria-label="Ver reporte de ${escapeAttr(item.project)}">
           ${donePhoto}
           <div class="ticket-body">
             <div class="ticket-top">
@@ -2976,6 +3112,9 @@
             ${reviewMarkup(item)}
             ${rejectionMarkup(item)}
             ${item.note ? `<div class="meta">Comentario: ${escapeHtml(item.note)}</div>` : ''}
+            <div class="ticket-actions">
+              <button class="btn mini secondary" data-open-detail="${escapeAttr(item.id)}">Ver reporte</button>
+            </div>
             ${actions}
           </div>
         </article>
@@ -3009,7 +3148,7 @@
            ${isReleased(item) ? `<a class="btn mini secondary" href="${mailLink(item)}">Correo</a>` : ''}
            <button class="btn mini danger" data-delete="${escapeAttr(item.id)}">Eliminar</button>`;
       return `
-        <article class="ticket" data-id="${escapeAttr(item.id)}">
+        <article class="ticket" data-id="${escapeAttr(item.id)}" data-open-detail="${escapeAttr(item.id)}" tabindex="0" role="button" aria-label="Ver reporte de ${escapeAttr(item.project)}">
           ${imageMarkup(item.qualityPhoto, 'Foto de calidad')}
           <div class="ticket-body">
             <div class="ticket-top">
@@ -3023,6 +3162,7 @@
             ${timelineMarkup(item)}
             ${rejectionMarkup(item)}
             <div class="ticket-actions">
+              <button class="btn mini secondary" data-open-detail="${escapeAttr(item.id)}">Ver reporte</button>
               ${actions}
             </div>
           </div>
@@ -3064,6 +3204,86 @@
           <div class="timeline-line"><span>Liberado por Calidad</span><strong>${release}</strong></div>
         </div>
       `;
+    }
+
+    function detailPhotoMarkup(src, label, emptyText) {
+      return `
+        <div class="detail-photo">
+          <span>${escapeHtml(label)}</span>
+          <div class="detail-photo-frame">
+            ${src ? `<img src="${src}" alt="${escapeAttr(label)}">` : escapeHtml(emptyText)}
+          </div>
+        </div>
+      `;
+    }
+
+    function detailActionsMarkup(item) {
+      const status = normalizeStatus(item.status);
+      if (state.access === 'obra') {
+        if (status === 'por-liberar' || isReleased(item)) {
+          return '<button class="btn secondary disabled" type="button" disabled>Atendido</button>';
+        }
+        return `<button class="btn done" data-complete="${escapeAttr(item.id)}">Atender</button>`;
+      }
+      return `
+        ${status === 'por-liberar' ? `<button class="btn done" data-release="${escapeAttr(item.id)}">Liberar</button><button class="btn danger" data-reject="${escapeAttr(item.id)}">Rechazar</button>` : ''}
+        ${isReleased(item) ? `<a class="btn secondary" href="${mailLink(item)}">Correo</a>` : ''}
+        <button class="btn danger" data-delete="${escapeAttr(item.id)}">Eliminar</button>
+      `;
+    }
+
+    function openDetailModal(id) {
+      const item = state.requests.find(row => row.id === id);
+      if (!item) return;
+      state.detailId = id;
+      els.detailTitle.textContent = `${item.project} | ${item.id}`;
+      els.detailBody.innerHTML = `
+        <div class="detail-photo-grid">
+          ${detailPhotoMarkup(item.qualityPhoto, 'Foto solicitada por Calidad', 'Sin fotografia de Calidad')}
+          ${detailPhotoMarkup(item.donePhoto, 'Foto reportada por Obra', 'Sin fotografia de Obra')}
+        </div>
+        <div class="detail-report">
+          <div class="detail-summary">
+            <div class="ticket-top">
+              <h4>${escapeHtml(item.project)}</h4>
+              <span class="status ${statusClass(item.status)}">${statusLabel(item.status)}</span>
+            </div>
+            <p>${escapeHtml(item.description)}</p>
+            ${item.note ? `<p><strong>Comentario de Obra:</strong> ${escapeHtml(item.note)}</p>` : ''}
+            ${item.rejectionNote ? `<p><strong>Motivo de rechazo:</strong> ${escapeHtml(item.rejectionNote)}</p>` : ''}
+          </div>
+          <div class="detail-meta-grid">
+            <div class="detail-meta-card"><span>Tipo</span><strong>${requestType(item) === 'garantia' ? 'Garantia' : 'Obra'}</strong></div>
+            <div class="detail-meta-card"><span>Estatus</span><strong>${statusLabel(item.status)}</strong></div>
+            <div class="detail-meta-card"><span>Solicitado</span><strong>${formatDate(item.requestDate)}</strong></div>
+            <div class="detail-meta-card"><span>Reportado por Obra</span><strong>${item.doneDate ? formatDate(item.doneDate) : 'Pendiente'}</strong></div>
+            <div class="detail-meta-card"><span>Liberado por Calidad</span><strong>${item.releaseDate ? formatDate(item.releaseDate) : 'Pendiente'}</strong></div>
+            <div class="detail-meta-card"><span>Folio</span><strong>${escapeHtml(item.id)}</strong></div>
+          </div>
+          ${timelineMarkup(item)}
+          ${reviewMarkup(item)}
+          ${rejectionMarkup(item)}
+        </div>
+      `;
+      els.detailActions.innerHTML = `<button type="button" class="btn secondary" id="closeDetailAction">Cerrar</button>${detailActionsMarkup(item)}`;
+      els.detailModal.classList.remove('hidden');
+    }
+
+    function refreshDetailModal() {
+      if (!state.detailId || els.detailModal.classList.contains('hidden')) return;
+      const item = state.requests.find(row => row.id === state.detailId);
+      if (!item) {
+        closeDetailModal();
+        return;
+      }
+      openDetailModal(item.id);
+    }
+
+    function closeDetailModal() {
+      state.detailId = '';
+      els.detailModal.classList.add('hidden');
+      els.detailBody.innerHTML = '';
+      els.detailActions.innerHTML = '';
     }
 
     function setView(view) {
@@ -3402,6 +3622,7 @@
       saveRequests();
       closeCompleteModal();
       render();
+      refreshDetailModal();
       showCompletionNotice(item);
     }
 
@@ -3426,6 +3647,7 @@
       }
       saveRequests();
       render();
+      refreshDetailModal();
     }
 
     async function rejectRequest(id) {
@@ -3445,6 +3667,7 @@
       }
       saveRequests();
       render();
+      refreshDetailModal();
     }
 
     function mailLink(item) {
@@ -3463,7 +3686,9 @@
     }
 
     async function deleteRequest(id) {
-      if (!confirm('Eliminar esta solicitud?')) return;
+      const item = state.requests.find(row => row.id === id);
+      const label = item ? `${item.project} | ${item.id}` : id;
+      if (!confirm(`Eliminar definitivamente esta solicitud?\n\n${label}`)) return;
       try { await deleteCloudRequest(id); }
       catch {
         alert('No se pudo eliminar en Supabase.');
@@ -3472,6 +3697,7 @@
       state.requests = state.requests.filter(item => item.id !== id);
       saveRequests();
       render();
+      if (state.detailId === id) closeDetailModal();
     }
 
     function exportFile(name, content, type) {
@@ -3863,12 +4089,15 @@
       const release = event.target.closest('[data-release]');
       const reject = event.target.closest('[data-reject]');
       const remove = event.target.closest('[data-delete]');
+      const openDetail = event.target.closest('[data-open-detail]');
       const openProjectButton = event.target.closest('[data-open-project]');
       const openQualityProjectButton = event.target.closest('[data-open-quality-project]');
       const qualityFilter = event.target.closest('[data-quality-filter]');
       const resetPassword = event.target.closest('[data-reset-password]');
       const deleteUserButton = event.target.closest('[data-delete-user]');
       const reportTypeButton = event.target.closest('[data-report-type-button]');
+      const closeDetailAction = event.target.closest('#closeDetailAction');
+      const handledAction = capture || upload || clear || complete || release || reject || remove || openProjectButton || openQualityProjectButton || qualityFilter || resetPassword || deleteUserButton || reportTypeButton || closeDetailAction;
       if (qualityFilter) {
         els.qualityStatus.value = qualityFilter.dataset.qualityFilter;
         renderQualityList();
@@ -3886,12 +4115,25 @@
         stopCamera(clear.dataset.clearPhoto);
         setPreview(clear.dataset.clearPhoto, '');
       }
+      if (openDetail && !handledAction) openDetailModal(openDetail.dataset.openDetail);
       if (complete) openCompleteModal(complete.dataset.complete);
       if (release) releaseRequest(release.dataset.release);
       if (reject) rejectRequest(reject.dataset.reject);
       if (remove) deleteRequest(remove.dataset.delete);
       if (resetPassword) resetUserPassword(resetPassword.dataset.resetPassword);
       if (deleteUserButton) deleteUser(deleteUserButton.dataset.deleteUser);
+      if (closeDetailAction) closeDetailModal();
+    });
+
+    document.body.addEventListener('keydown', event => {
+      if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('[data-open-detail]')) {
+        event.preventDefault();
+        openDetailModal(event.target.dataset.openDetail);
+      }
+      if (event.key === 'Escape') {
+        if (!els.detailModal.classList.contains('hidden')) closeDetailModal();
+        if (!els.completeModal.classList.contains('hidden')) closeCompleteModal();
+      }
     });
 
     els.loginForm.addEventListener('submit', login);
@@ -3907,6 +4149,7 @@
     els.completeForm.addEventListener('submit', completeRequest);
     document.getElementById('closeCompleteModal').addEventListener('click', closeCompleteModal);
     document.getElementById('cancelComplete').addEventListener('click', closeCompleteModal);
+    document.getElementById('closeDetailModal').addEventListener('click', closeDetailModal);
     document.getElementById('toastClose').addEventListener('click', () => els.toastWrap.classList.add('hidden'));
     document.getElementById('newRequestBtn').addEventListener('click', () => setView('nueva'));
     document.getElementById('backToQualityFromNew').addEventListener('click', () => setView('calidad'));
