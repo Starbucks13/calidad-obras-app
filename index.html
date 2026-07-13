@@ -826,6 +826,21 @@
     .btn.warn { background: var(--warn); }
     .btn.done { background: var(--done); }
     .btn.danger { background: var(--danger); }
+    .btn.disabled,
+    .btn:disabled {
+      color: #5f6f79;
+      background: #dfe7eb;
+      cursor: default;
+      box-shadow: none;
+      transform: none;
+    }
+
+    .btn.disabled:hover,
+    .btn:disabled:hover {
+      background: #dfe7eb;
+      box-shadow: none;
+      transform: none;
+    }
 
     .btn.icon {
       width: 42px;
@@ -2421,7 +2436,7 @@
       document.getElementById('statRejected').textContent = countByStatus('rechazado');
       document.getElementById('statDone').textContent = state.requests.filter(isReleased).length;
       document.getElementById('qualityCount').textContent = state.requests.filter(isOpen).length;
-      document.getElementById('siteCount').textContent = state.requests.filter(item => ['pendiente', 'rechazado'].includes(normalizeStatus(item.status))).length;
+      document.getElementById('siteCount').textContent = state.requests.filter(item => ['pendiente', 'por-liberar', 'rechazado'].includes(normalizeStatus(item.status))).length;
       document.getElementById('reportCount').textContent = state.requests.length;
       document.querySelectorAll('[data-dashboard-filter]').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.dashboardFilter === state.dashboardFilter);
@@ -2611,7 +2626,7 @@
       }
 
       const query = els.siteSearch.value.trim().toLowerCase();
-      let items = state.requests.filter(item => ['pendiente', 'rechazado'].includes(normalizeStatus(item.status))).sort(sortOldest);
+      let items = state.requests.filter(item => ['pendiente', 'por-liberar', 'rechazado'].includes(normalizeStatus(item.status))).sort(sortOldest);
       items = items.filter(item => item.project === state.selectedProject);
       items = searchItems(items, query);
       els.selectedProjectTitle.textContent = state.selectedProject;
@@ -2621,7 +2636,7 @@
     function renderProjectDirectory() {
       const card = project => {
         const name = projectName(project);
-        const open = state.requests.filter(item => item.project === name && ['pendiente', 'rechazado'].includes(normalizeStatus(item.status)));
+        const open = state.requests.filter(item => item.project === name && ['pendiente', 'por-liberar', 'rechazado'].includes(normalizeStatus(item.status)));
         const label = open.length === 1 ? 'pendiente abierto' : 'pendientes abiertos';
         return `
           <button class="project-card" data-open-project="${escapeAttr(name)}">
@@ -2812,6 +2827,7 @@
       const donePhoto = item.donePhoto
         ? `<div class="ticket-img"><img src="${item.donePhoto}" alt="Foto de terminacion"></div>`
         : imageMarkup(item.qualityPhoto, 'Foto de calidad');
+      const actions = ticketActionsMarkup(item);
       return `
         <article class="ticket" data-id="${escapeAttr(item.id)}">
           ${donePhoto}
@@ -2828,17 +2844,31 @@
             ${reviewMarkup(item)}
             ${rejectionMarkup(item)}
             ${item.note ? `<div class="meta">Comentario: ${escapeHtml(item.note)}</div>` : ''}
-            <div class="ticket-actions">
-              ${item.status === 'por-liberar' ? `<button class="btn mini done" data-release="${escapeAttr(item.id)}">Liberar</button><button class="btn mini danger" data-reject="${escapeAttr(item.id)}">Rechazar</button>` : ''}
-              ${isReleased(item) ? `<a class="btn mini secondary" href="${mailLink(item)}">Correo</a>` : ''}
-              <button class="btn mini danger" data-delete="${escapeAttr(item.id)}">Eliminar</button>
-            </div>
+            ${actions}
           </div>
         </article>
       `;
     }
 
+    function ticketActionsMarkup(item) {
+      const status = normalizeStatus(item.status);
+      if (state.access === 'obra') {
+        if (status === 'por-liberar' || isReleased(item)) {
+          return '<div class="ticket-actions"><button class="btn mini disabled" type="button" disabled>Atendido</button></div>';
+        }
+        return `<div class="ticket-actions"><button class="btn mini done" data-complete="${escapeAttr(item.id)}">Atender</button></div>`;
+      }
+      return `
+        <div class="ticket-actions">
+          ${status === 'por-liberar' ? `<button class="btn mini done" data-release="${escapeAttr(item.id)}">Liberar</button><button class="btn mini danger" data-reject="${escapeAttr(item.id)}">Rechazar</button>` : ''}
+          ${isReleased(item) ? `<a class="btn mini secondary" href="${mailLink(item)}">Correo</a>` : ''}
+          <button class="btn mini danger" data-delete="${escapeAttr(item.id)}">Eliminar</button>
+        </div>
+      `;
+    }
+
     function siteTicketMarkup(item) {
+      const status = normalizeStatus(item.status);
       return `
         <article class="ticket" data-id="${escapeAttr(item.id)}">
           ${imageMarkup(item.qualityPhoto, 'Foto de calidad')}
@@ -2854,7 +2884,7 @@
             ${timelineMarkup(item)}
             ${rejectionMarkup(item)}
             <div class="ticket-actions">
-              <button class="btn mini done" data-complete="${escapeAttr(item.id)}">Atender</button>
+              ${status === 'por-liberar' ? '<button class="btn mini disabled" type="button" disabled>Atendido</button>' : `<button class="btn mini done" data-complete="${escapeAttr(item.id)}">Atender</button>`}
             </div>
           </div>
         </article>
